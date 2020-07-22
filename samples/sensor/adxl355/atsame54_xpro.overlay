@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) 2020 Rubus Technologes Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&i2c1 {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	adxl355@1d {
+		compatible = "adi,adxl355";
+		reg = <0x1d>;
+		label = "ADXL355";
+		int1-gpios = <&gpioc 6 0>;
+	};
+};

@@ -1,0 +1,14 @@
+sample:
+  name: ADXL355 3-Axis Accelerometer Sensor
+tests:
+  sample.sensor.adxl355:
+    harness: sensor
+    tags: sensors
+    depends_on: spi
+    platform_whitelist: atsame54_xpro
+  sample.sensor.adxl355.i2c:
+    harness: sensor
+    tags: sensors
+    depends_on: i2c
+    platform_whitelist: atsame54_xpro
+    extra_args: "CONF_FILE=prj_i2c.conf"
