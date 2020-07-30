@@ -1,0 +1,16 @@
+# Microchip dsPIC33F MCU series
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+choice
+	prompt "Microchip dsPIC33F MCU Selection"
+	depends on SOC_SERIES_DSPIC33F
+
+config SOC_DSPIC33FJ256GP710A
+	bool "dspic33fj256gp710a"
+
+config SOC_DSPIC33FJ128MC804
+	bool "dspic33fj128mc804"
+
+endchoice

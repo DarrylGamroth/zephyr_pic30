@@ -1,0 +1,21 @@
+# Microchip dsPIC33F MCU series configuration options
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SERIES_DSPIC33F
+
+config SOC_SERIES
+	default "dspic33f"
+
+config SOC
+	default "33fj256gp710a" if SOC_DSPIC33FJ256GP710A
+	default "33fj128mc804" if SOC_DSPIC33FJ128MC804
+
+config NUM_IRQS
+	default 126
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default 48000000
+
+endif # SOC_SERIES_DSPIC33F

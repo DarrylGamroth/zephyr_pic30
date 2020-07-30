@@ -1,0 +1,38 @@
+# PIC30 architecture configuration options
+
+# SPDX-License-Identifier: Apache-2.0
+
+menu "PIC30 Options"
+	depends on PIC30
+
+config ARCH
+	default "pic30"
+
+#
+# CPU Families - the SoC configuration should select the right one.
+#
+
+config NUM_IRQS
+	int
+
+config PLATFORM_SPECIFIC_INIT
+	bool "Enable platform (SOC) specific startup hook"
+	help
+	  The platform specific initialization code (z_platform_init) is executed
+	  at the beginning of the startup code (__start).
+
+config BUILTIN_STACK_GUARD
+	bool "Thread Stack Guards based on built-in stack limit checking"
+	default y
+	select THREAD_STACK_INFO
+	help
+	  Enable Thread/Interrupt Stack Guards via built-in Stack Pointer
+	  limit checking.
+	
+config XIP
+	default y
+
+config GEN_ISR_TABLES
+	default y
+
+endmenu

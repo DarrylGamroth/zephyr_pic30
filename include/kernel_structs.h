@@ -101,7 +101,7 @@ typedef struct _ready_q _ready_q_t;
 
 struct _cpu {
 	/* nested interrupt count */
-	uint32_t nested;
+	unsigned int nested;
 
 	/* interrupt stack pointer base */
 	char *irq_stack;

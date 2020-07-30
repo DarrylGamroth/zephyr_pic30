@@ -1,0 +1,8 @@
+# Microchip XC16 Toolchain
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config TOOLCHAIN_XC16
+	def_bool n
+	select HAS_NEWLIB_LIBC_NANO

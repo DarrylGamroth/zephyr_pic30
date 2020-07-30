@@ -47,6 +47,8 @@
 #endif
 #elif defined(CONFIG_XTENSA)
 	/* Not needed */
+#elif define(CONFIG_PIC30)
+	OUTPUT_ARCH("elf32-pic30")
 #elif defined(CONFIG_ARCH_POSIX)
 	/* Not needed */
 #else

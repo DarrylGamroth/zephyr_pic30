@@ -1,0 +1,8 @@
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: Microchip dsPIC33C CPU
+
+compatible: "microchip,dspic33c"
+
+include: cpu.yaml

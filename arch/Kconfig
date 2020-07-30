@@ -67,6 +67,17 @@ config XTENSA
 	help
 	  Xtensa architecture
 
+config PIC30
+	bool
+	select ARCH_IS_SET
+	select HAS_DTS
+	select USE_SWITCH
+	select USE_SWITCH_SUPPORTED
+	select STACK_GROWS_UP
+	select ARCH_HAS_STACK_PROTECTION
+	help
+	  PIC30 architecture
+
 config ARCH_POSIX
 	bool
 	select ARCH_IS_SET
