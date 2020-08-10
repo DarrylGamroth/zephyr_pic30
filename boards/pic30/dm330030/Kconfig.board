@@ -1,0 +1,9 @@
+#
+# Copyright (c) 2020 Rubus Technologies Inc.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+config BOARD_DM330030
+	bool "Microchip DM330030 dsPIC33CK Curiosity"
+	depends on SOC_PIC33CK256MP508

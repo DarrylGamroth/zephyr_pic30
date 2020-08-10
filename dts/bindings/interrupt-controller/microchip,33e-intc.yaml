@@ -8,7 +8,7 @@ properties:
     reg:
       required: true
 
-    arm,num-irq-priority-bits:
+    microchip,num-irq-priority-bits:
       required: true
       type: int
       description: number of bits of IRQ priorities

@@ -1,6 +1,0 @@
-# Microchip pic30 MCU family default configuration options
-
-# Copyright (c) 2020 Rubus Technologies Inc.
-# SPDX-License-Identifier: Apache-2.0
-
-source "soc/pic30/*/Kconfig.defconfig.series"

@@ -1,0 +1,12 @@
+# Microchip DM330030 board configuration
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_DM330030
+
+config BOARD
+	default "dm330030"
+
+endif
+

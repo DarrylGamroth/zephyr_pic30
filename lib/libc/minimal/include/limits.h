@@ -50,6 +50,8 @@ extern "C" {
 #define SSIZE_MAX	__INT32_MAX__
 #elif __SIZE_MAX__ == __UINT64_MAX__
 #define SSIZE_MAX	__INT64_MAX__
+#elif __SIZE_MAX__ == __UINT16_MAX__
+#define SSIZE_MAX	__INT16_MAX__
 #else
 #error "unexpected __SIZE_MAX__ value"
 #endif
@@ -62,6 +64,8 @@ extern "C" {
 
 #if __SIZEOF_INT__ == 4
 #define UINT_MAX	0xFFFFFFFFU
+#elif __SIZEOF_INT__ == 2
+#define UINT_MAX	0xFFFFU
 #else
 #error "unexpected __SIZEOF_INT__ value"
 #endif

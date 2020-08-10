@@ -1,0 +1,30 @@
+/*
+ * Copyright (c) 2020 Rubus Technologies Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include "skeleton.dtsi"
+
+/ {
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		interrupt-parent = <&intc>;
+		ranges;
+
+		intc: interrupt-controller@2  {
+			compatible = "microchip,33e-intc";
+			reg = <0x000002 0x1fe>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		systick: timer@104 {
+			compatible = "microchip,pic30-type-a";
+			reg = <0x000104 0x06>;
+			status = "disabled";
+		};
+	};
+};

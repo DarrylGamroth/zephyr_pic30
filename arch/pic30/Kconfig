@@ -29,9 +29,6 @@ config BUILTIN_STACK_GUARD
 	  Enable Thread/Interrupt Stack Guards via built-in Stack Pointer
 	  limit checking.
 	
-config XIP
-	default y
-
 config GEN_ISR_TABLES
 	default y
 

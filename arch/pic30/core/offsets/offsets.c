@@ -24,24 +24,20 @@
 
 #include <kernel.h>
 #include <kernel_arch_data.h>
+#include <gen_offset.h>
 #include <kernel_offsets.h>
-
-#if 0
-GEN_OFFSET_SYM(_thread_arch_t, basepri);
-GEN_OFFSET_SYM(_thread_arch_t, swap_return_value);
-
-GEN_OFFSET_SYM(_basic_sf_t, a1);
-GEN_OFFSET_SYM(_basic_sf_t, a2);
-GEN_OFFSET_SYM(_basic_sf_t, a3);
-GEN_OFFSET_SYM(_basic_sf_t, a4);
-GEN_OFFSET_SYM(_basic_sf_t, ip);
-GEN_OFFSET_SYM(_basic_sf_t, lr);
-GEN_OFFSET_SYM(_basic_sf_t, pc);
-GEN_OFFSET_SYM(_basic_sf_t, xpsr);
-#endif
 
 GEN_ABSOLUTE_SYM(___esf_t_SIZEOF, sizeof(_esf_t));
 
+GEN_OFFSET_SYM(_thread_t, switch_handle);
+
+GEN_OFFSET_SYM(_standard_stack_frame_t, w0);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w1);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w2);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w3);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w4);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w5);
+GEN_OFFSET_SYM(_standard_stack_frame_t, w6);
 GEN_OFFSET_SYM(_callee_saved_t, w8);
 GEN_OFFSET_SYM(_callee_saved_t, w9);
 GEN_OFFSET_SYM(_callee_saved_t, w10);
@@ -53,6 +49,9 @@ GEN_OFFSET_SYM(_callee_saved_t, w14);
 /* size of the entire preempt registers structure */
 
 GEN_ABSOLUTE_SYM(___callee_saved_t_SIZEOF, sizeof(struct _callee_saved));
+
+GEN_ABSOLUTE_SYM(__STD_STACK_FRAME_SIZEOF,
+		 STACK_ROUND_UP(sizeof(_standard_stack_frame_t)));
 
 #if defined(CONFIG_THREAD_STACK_INFO)
 GEN_OFFSET_SYM(_thread_stack_info_t, start);
@@ -67,3 +66,5 @@ GEN_ABSOLUTE_SYM(___thread_stack_info_t_SIZEOF,
  */
 
 GEN_ABSOLUTE_SYM(_K_THREAD_NO_FLOAT_SIZEOF, sizeof(struct k_thread));
+
+GEN_ABS_SYM_END

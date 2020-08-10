@@ -16,6 +16,43 @@
  * common expectations and usage.
  */
 
+#if CONFIG_16BIT
+#if 0
+#if __SIZEOF_INT__ != 2
+#error "unexpected int width"
+#endif
+
+#undef __INT32_TYPE__
+#undef __UINT32_TYPE__
+#undef __INT_LEAST32_TYPE__
+#undef __UINT_LEAST32_TYPE__
+#undef __INT64_TYPE__
+#undef __UINT64_TYPE__
+#define __INT32_TYPE__ long
+#define __UINT32_TYPE__ unsigned long
+#define __INT_LEAST32_TYPE__ __INT32_TYPE__
+#define __UINT_LEAST32_TYPE__ __UINT32_TYPE__
+#define __INT64_TYPE__ long long int
+#define __UINT64_TYPE__ unsigned long long int
+
+/*
+ * The confusion also exists with __INTPTR_TYPE__ which is either an int
+ * (even when __INT32_TYPE__ is a long int) or a long int. Let's redefine
+ * it to a long int to get some uniformity. Doing so also makes it compatible
+ * with LP64 (64-bit) targets where a long is always 64-bit wide.
+ */
+
+#if __SIZEOF_POINTER__ != __SIZEOF_INT__
+#error "unexpected size difference between pointers and long ints"
+#endif
+#endif
+
+#undef __INTPTR_TYPE__
+#undef __UINTPTR_TYPE__
+#define __INTPTR_TYPE__ int
+#define __UINTPTR_TYPE__ unsigned int
+#else
+
 #if __SIZEOF_INT__ != 4
 #error "unexpected int width"
 #endif
@@ -48,5 +85,6 @@
 #undef __UINTPTR_TYPE__
 #define __INTPTR_TYPE__ long int
 #define __UINTPTR_TYPE__ long unsigned int
+#endif
 
 #endif /* ZEPHYR_INCLUDE_TOOLCHAIN_STDINT_H_ */

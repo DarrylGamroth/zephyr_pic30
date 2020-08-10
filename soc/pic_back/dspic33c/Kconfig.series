@@ -1,0 +1,12 @@
+# Microchip dsPIC33C MCU series
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_DSPIC33C
+	bool "Microchip dsPIC33C MCU"
+	select PIC30
+	select CPU_DSPIC33C
+	select SOC_FAMILY_DSPIC33C
+	help
+	  Enable support for Microchip dsPIC33C microcontrollers.

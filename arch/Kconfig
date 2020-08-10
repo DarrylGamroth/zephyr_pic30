@@ -69,12 +69,14 @@ config XTENSA
 
 config PIC30
 	bool
+	select 16BIT
 	select ARCH_IS_SET
 	select HAS_DTS
 	select USE_SWITCH
 	select USE_SWITCH_SUPPORTED
 	select STACK_GROWS_UP
 	select ARCH_HAS_STACK_PROTECTION
+	imply XIP
 	help
 	  PIC30 architecture
 
@@ -116,6 +118,15 @@ config BIG_ENDIAN
 	  soc/**/Kconfig, or boards/**/Kconfig and the user should generally avoid
 	  modifying it.  The option is used to select linker script OUTPUT_FORMAT
 	  and command line option for gen_isr_tables.py.
+
+config 16BIT
+	bool
+	help
+	  This option tells the build system that the target system is
+	  using a 16-bit address space, meaning that pointers are 16 bits
+	  This option is selected by arch/$ARCH/Kconfig, soc/**/Kconfig,
+	  or boards/**/Kconfig and the user should generally
+	  avoid modifying it.
 
 config 64BIT
 	bool

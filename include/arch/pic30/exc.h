@@ -72,12 +72,14 @@ extern "C" {
 #endif
 
 struct __esf {
-    uint16_t w8;
-    uint16_t w9;
-    uint16_t w10;
-    uint16_t w11;
-    uint16_t w12;
-    uint16_t w13;
+    uint16_t w0;
+    uint16_t w1;
+    uint16_t w2;
+    uint16_t w3;
+    uint16_t w4;
+    uint16_t w5;
+    uint16_t w6;
+    uint16_t w7;
     uint16_t tblpag;
     uint16_t accal;
     uint16_t accah;

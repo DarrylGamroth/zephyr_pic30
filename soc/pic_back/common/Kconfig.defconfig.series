@@ -1,0 +1,41 @@
+# Microchip PIC30 MCU family configuration options
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_FAMILY_PIC30
+
+config ADC_PIC30
+	default ADC
+
+config COUNTER_PIC30_TC32
+	default COUNTER
+
+config DMA_PIC30
+	default DMA
+
+config GPIO_PIC30
+	default GPIO
+
+config HWINFO_PIC30
+	default HWINFO
+
+config I2C_PIC30
+	default I2C
+
+config PINMUX_PIC30
+	default PINMUX
+
+config PWM_PIC30_TCC
+	default PWM
+
+config SPI_PIC30
+	default SPI
+
+config UART_PIC30
+	default SERIAL
+
+config WDT_PIC30
+	default WATCHDOG
+
+endif # SOC_FAMILY_PIC30

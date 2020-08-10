@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Intel Corporation
+ * Copyright (c) 2020 Rubus Technologies Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -22,6 +22,10 @@
 #ifndef _ASMLANGUAGE
 #include <zephyr/types.h>
 
+/*
+ * The following structure defines the list of registers that need to be
+ * saved/restored when a cooperative context switch occurs.
+ */
 struct _callee_saved {
     uint16_t w8;
     uint16_t w9;
@@ -31,10 +35,10 @@ struct _callee_saved {
     uint16_t w13;
     uint16_t w14;
 };
-
 typedef struct _callee_saved _callee_saved_t;
 
 struct _thread_arch {
+	uint32_t swap_return_value; /* Return value of z_swap() */
 };
 
 typedef struct _thread_arch _thread_arch_t;

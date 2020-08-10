@@ -6,4 +6,4 @@
 
 config BOARD_EXPLORER16
 	bool "Microchip Explorer16 Board"
-	depends on SOC_DSPIC33F
+	depends on SOC_DSPIC33FJ256GP710A

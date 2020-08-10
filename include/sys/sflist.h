@@ -27,6 +27,8 @@ extern "C" {
 
 #ifdef __LP64__
 typedef uint64_t unative_t;
+#elif defined(CONFIG_16BIT)
+typedef uint16_t unative_t;
 #else
 typedef uint32_t unative_t;
 #endif

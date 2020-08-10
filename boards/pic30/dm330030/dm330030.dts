@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) 2020 Rubus Technologies Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <dspic33c/33ck256mp508.dtsi>
+
+/ {
+	model = "Microchip DM330030 dsPIC33CK Curiosity";
+	compatible = "dspic33c,dm330030", "microchip,dspic33ck256mp508";
+};
+

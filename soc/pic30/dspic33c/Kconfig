@@ -5,6 +5,7 @@
 
 config SOC_FAMILY_PIC30
 	bool
+	select BUILD_OUTPUT_HEX
 
 if SOC_FAMILY_PIC30
 
@@ -12,7 +13,6 @@ config SOC_FAMILY
 	string
 	default "pic30"
 
-source "soc/pic30/common/Kconfig.dspic33f"
-source "soc/pic30/*/Kconfig.soc"
+source "soc/pic30/dspic33c/*/Kconfig.soc"
 
 endif

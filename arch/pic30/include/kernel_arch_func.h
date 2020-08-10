@@ -22,8 +22,19 @@ extern "C" {
 #endif
 
 #ifndef _ASMLANGUAGE
+
+/**
+ * @brief Perform architecture-specific initialization
+ *
+ * This routine performs architecture-specific initialization of the
+ * kernel.  Trivial stuff is done inline; more complex initialization
+ * is done via function calls.
+ *
+ * @return N/A
+ */
 static ALWAYS_INLINE void arch_kernel_init(void)
 {
+
 }
 
 /* PIC30 currently supports USE_SWITCH and USE_SWITCH only */

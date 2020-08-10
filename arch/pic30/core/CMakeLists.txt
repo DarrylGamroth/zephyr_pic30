@@ -3,6 +3,7 @@
 zephyr_library()
 
 zephyr_library_sources(
+  entry.S
   cpu_idle.c
   prep_c.c
   )

@@ -38,7 +38,8 @@
 
 #elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) || \
       defined(__THUMBEL__) || defined(__AARCH64EL__) || \
-      defined(__MIPSEL__) || defined(__TC32EL__)
+      defined(__MIPSEL__) || defined(__TC32EL__) || \
+      defined(__PIC30__)
 
 #define __BYTE_ORDER__                  __ORDER_LITTLE_ENDIAN__
 
@@ -413,7 +414,8 @@ do {                                                                    \
 		",%c0"                              \
 		"\n\t.type\t" #name ",@object" :  : "n"(value))
 
-#elif defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || defined(CONFIG_XTENSA)
+#elif defined(CONFIG_NIOS2) || defined(CONFIG_RISCV) || \
+    defined(CONFIG_XTENSA) || defined(CONFIG_PIC30)
 
 /* No special prefixes necessary for constants in this arch AFAICT */
 #define GEN_ABSOLUTE_SYM(name, value)		\
