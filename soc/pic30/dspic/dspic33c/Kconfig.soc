@@ -7,7 +7,7 @@ choice
 	prompt "Microchip dsPIC33C MCU Selection"
 	depends on SOC_SERIES_DSPIC33C
 
-config SOC_DSPIC33CK256MP508
+config SOC_PART_NUMBER_DSPIC33CK256MP508
 	bool "DSPIC33CK256MP508"
 
 endchoice

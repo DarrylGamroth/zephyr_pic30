@@ -27,17 +27,17 @@
 #include <gen_offset.h>
 #include <kernel_offsets.h>
 
-GEN_ABSOLUTE_SYM(___esf_t_SIZEOF, sizeof(_esf_t));
+#ifdef CONFIG_PIC30_SOC_CONTEXT_SAVE
+#include <soc_context.h>
+#endif
+#ifdef CONFIG_PIC30_SOC_OFFSETS
+#include <soc_offsets.h>
+#endif
 
+/* thread_arch_t member offsets */
 GEN_OFFSET_SYM(_thread_t, switch_handle);
 
-GEN_OFFSET_SYM(_standard_stack_frame_t, w0);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w1);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w2);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w3);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w4);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w5);
-GEN_OFFSET_SYM(_standard_stack_frame_t, w6);
+/* struct coop member offsets */
 GEN_OFFSET_SYM(_callee_saved_t, w8);
 GEN_OFFSET_SYM(_callee_saved_t, w9);
 GEN_OFFSET_SYM(_callee_saved_t, w10);
@@ -46,25 +46,29 @@ GEN_OFFSET_SYM(_callee_saved_t, w12);
 GEN_OFFSET_SYM(_callee_saved_t, w13);
 GEN_OFFSET_SYM(_callee_saved_t, w14);
 
-/* size of the entire preempt registers structure */
+/* esf member offsets */
+GEN_OFFSET_SYM(z_arch_esf_t, w0);
+GEN_OFFSET_SYM(z_arch_esf_t, w1);
+GEN_OFFSET_SYM(z_arch_esf_t, w2);
+GEN_OFFSET_SYM(z_arch_esf_t, w3);
+GEN_OFFSET_SYM(z_arch_esf_t, w4);
+GEN_OFFSET_SYM(z_arch_esf_t, w5);
+GEN_OFFSET_SYM(z_arch_esf_t, w6);
+GEN_OFFSET_SYM(z_arch_esf_t, w7);
 
-GEN_ABSOLUTE_SYM(___callee_saved_t_SIZEOF, sizeof(struct _callee_saved));
-
-GEN_ABSOLUTE_SYM(__STD_STACK_FRAME_SIZEOF,
-		 STACK_ROUND_UP(sizeof(_standard_stack_frame_t)));
-
-#if defined(CONFIG_THREAD_STACK_INFO)
-GEN_OFFSET_SYM(_thread_stack_info_t, start);
-
-GEN_ABSOLUTE_SYM(___thread_stack_info_t_SIZEOF,
-	 sizeof(struct _thread_stack_info));
+#if defined(CONFIG_PIC30_SOC_CONTEXT_SAVE)
+GEN_OFFSET_SYM(z_arch_esf_t, soc_context);
 #endif
+#if defined(CONFIG_PIC30_SOC_OFFSETS)
+GEN_SOC_OFFSET_SYMS();
+#endif
+
+GEN_ABSOLUTE_SYM(__z_arch_esf_t_SIZEOF, STACK_ROUND_UP(sizeof(z_arch_esf_t)));
 
 /*
  * size of the struct k_thread structure sans save area for floating
  * point registers.
  */
-
 GEN_ABSOLUTE_SYM(_K_THREAD_NO_FLOAT_SIZEOF, sizeof(struct k_thread));
 
 GEN_ABS_SYM_END

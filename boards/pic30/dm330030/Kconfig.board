@@ -6,4 +6,4 @@
 
 config BOARD_DM330030
 	bool "Microchip DM330030 dsPIC33CK Curiosity"
-	depends on SOC_PIC33CK256MP508
+	depends on SOC_PART_NUMBER_DSPIC33CK256MP508

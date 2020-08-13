@@ -40,6 +40,9 @@ static ALWAYS_INLINE void arch_kernel_init(void)
 /* PIC30 currently supports USE_SWITCH and USE_SWITCH only */
 void arch_switch(void *switch_to, void **switched_from);
 
+FUNC_NORETURN void z_pic30_fatal_error(unsigned int reason,
+				       const z_arch_esf_t *esf);
+
 static inline bool arch_is_in_isr(void)
 {
 	return _kernel.cpus[0].nested != 0U;

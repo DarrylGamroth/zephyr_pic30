@@ -31,8 +31,7 @@
 
 void _PrepC(void)
 {
-	z_data_copy();
-//	z_bss_zero();
+	z_bss_zero();
 //    z_pic30_interrupt_init();
 	z_cstart();
 	CODE_UNREACHABLE;

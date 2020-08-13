@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+
+source "soc/pic30/dspic/*/Kconfig.defconfig.series"

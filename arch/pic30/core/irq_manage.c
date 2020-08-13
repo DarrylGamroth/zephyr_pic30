@@ -12,5 +12,7 @@ LOG_MODULE_DECLARE(os);
 FUNC_NORETURN void z_irq_spurious(void *unused)
 {
 	ARG_UNUSED(unused);
+
+    z_pic30_fatal_error(K_ERR_SPURIOUS_IRQ, NULL);
 }
 

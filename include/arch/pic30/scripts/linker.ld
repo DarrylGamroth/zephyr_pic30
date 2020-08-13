@@ -39,7 +39,7 @@
 _region_min_align = 2;
 
 #define MPU_ALIGN(region_size) \
-    . = ALIGN(_region_min_align)
+    . = ALIGN(_region_min_align) \
 #endif
 
 MEMORY

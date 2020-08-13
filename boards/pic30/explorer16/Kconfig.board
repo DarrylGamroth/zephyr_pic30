@@ -1,9 +1,0 @@
-#
-# Copyright (c) 2020 Rubus Technologies Inc.
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-
-config BOARD_EXPLORER16
-	bool "Microchip Explorer16 Board"
-	depends on SOC_DSPIC33FJ256GP710A

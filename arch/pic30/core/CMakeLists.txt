@@ -2,32 +2,23 @@
 
 zephyr_library()
 
-zephyr_library_sources(
-  entry.S
-  cpu_idle.c
-  prep_c.c
-  )
-
 #zephyr_library_sources(
-#  vector_table.S
+#  cpu_idle.c
+#  fatal.c
+#  irq_manage.c
+#  isr.S
+#  prep_c.c
 #  reset.S
-#  fault_s.S
-#  fault.c
-#  exc_exit.S
-#  scb.c
-#  irq_init.c
-#  thread_abort.c
-#  )
+#  swap.S
+#  thread.c
+#)
 
-zephyr_linker_sources_ifdef(CONFIG_SW_VECTOR_RELAY
-  ROM_START
-  SORT_KEY 0x0relay_vectors
-  relay_vector_table.ld
-  )
+zephyr_library_sources(
+  cpu_idle.c
+  fatal.c
+  irq_manage.c
+  prep_c.c
+  thread.c
+)
 
-if (CONFIG_SW_VECTOR_RELAY OR CONFIG_SW_VECTOR_RELAY_CLIENT)
-zephyr_linker_sources(
-  RAM_SECTIONS
-  vt_pointer_section.ld
-  )
-endif()
+zephyr_library_sources_if_kconfig(irq_offload.c)

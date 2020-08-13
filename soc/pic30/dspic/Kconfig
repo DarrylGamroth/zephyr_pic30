@@ -1,0 +1,17 @@
+# Microchip DSPIC MCU family configuration options
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_DSPIC
+	bool
+
+if SOC_FAMILY_DSPIC
+
+config SOC_FAMILY
+	string
+	default "dspic"
+
+source "soc/pic30/dspic/*/Kconfig.soc"
+
+endif

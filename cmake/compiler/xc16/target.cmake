@@ -33,10 +33,9 @@ if(NOT DEFINED NOSYSDEF_CFLAG)
 endif()
 
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/include/lega-c")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/h")
 
-include(${ZEPHYR_BASE}/cmake/gcc-m-cpu.cmake)
-
-list(APPEND TOOLCHAIN_C_FLAGS -omf=elf)
+list(APPEND TOOLCHAIN_C_FLAGS -omf=elf -mcpu=GENERIC-16DSP-CH)
 
 # For CMake to be able to test if a compiler flag is supported by the
 # toolchain we need to give CMake the necessary flags to compile and
