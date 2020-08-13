@@ -25,7 +25,11 @@ extern "C" {
  *
  * Should preferably be equivalent to a native word size.
  */
+#ifdef __XC16__
+typedef unsigned int log_arg_t;
+#else
 typedef unsigned long log_arg_t;
+#endif
 
 /** @brief Maximum number of arguments in the standard log entry.
  *

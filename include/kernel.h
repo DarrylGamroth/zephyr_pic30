@@ -3563,7 +3563,7 @@ struct k_mutex {
 	struct k_thread *owner;
 
 	/** Current lock count */
-	uint32_t lock_count;
+	unsigned int lock_count;
 
 	/** Original thread priority */
 	int owner_orig_prio;
@@ -3579,7 +3579,7 @@ struct k_mutex {
 	{ \
 	.wait_q = Z_WAIT_Q_INIT(&obj.wait_q), \
 	.owner = NULL, \
-	.lock_count = 0, \
+	.lock_count = 0U, \
 	.owner_orig_prio = K_LOWEST_THREAD_PRIO, \
 	_OBJECT_TRACING_INIT \
 	}
@@ -3673,8 +3673,8 @@ __syscall int k_mutex_unlock(struct k_mutex *mutex);
 
 struct k_sem {
 	_wait_q_t wait_q;
-	uint32_t count;
-	uint32_t limit;
+	unsigned int count;
+	unsigned int limit;
 	_POLL_EVENT;
 
 	_OBJECT_TRACING_NEXT_PTR(k_sem)

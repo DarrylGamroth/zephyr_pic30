@@ -98,6 +98,4 @@
 #define __UINT_LEAST64_MAX__ 0xffffffffffffffffULL
 #define __UINT_LEAST64_TYPE__ long long unsigned int
 
-#define __BYTE_ORDER__ (2)
-
 #endif

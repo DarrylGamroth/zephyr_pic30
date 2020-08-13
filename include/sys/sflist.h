@@ -27,7 +27,7 @@ extern "C" {
 
 #ifdef __LP64__
 typedef uint64_t unative_t;
-#elif defined(CONFIG_16BIT)
+#elif defined(__XC16__)
 typedef uint16_t unative_t;
 #else
 typedef uint32_t unative_t;
@@ -202,7 +202,7 @@ static inline void sys_sflist_init(sys_sflist_t *list)
 }
 
 #define SYS_SFLIST_STATIC_INIT(ptr_to_list) {NULL, NULL}
-#define SYS_SFLIST_FLAGS_MASK	0x3UL
+#define SYS_SFLIST_FLAGS_MASK	((unative_t)0x3U)
 
 static inline sys_sfnode_t *z_sfnode_next_peek(sys_sfnode_t *node)
 {

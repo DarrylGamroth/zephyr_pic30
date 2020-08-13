@@ -226,7 +226,7 @@ static inline int min_chunk_size(struct z_heap *h)
 static inline int bucket_idx(struct z_heap *h, size_t sz)
 {
 	size_t usable_sz = sz - min_chunk_size(h) + 1;
-	return 31 - __builtin_clz(usable_sz);
+	return (sizeof(size_t) * CHAR_BIT - 1) - __builtin_clz(usable_sz);
 }
 
 /* For debugging */

@@ -104,9 +104,9 @@ bool z_is_t1_higher_prio_than_t2(struct k_thread *thread_1,
 	 * go negative is fine and in fact prevents aliasing bugs.
 	 */
 	if (thread_1->base.prio == thread_2->base.prio) {
-		int now = (int) k_cycle_get_32();
-		int dt1 = thread_1->base.prio_deadline - now;
-		int dt2 = thread_2->base.prio_deadline - now;
+		int32_t now = (int32_t) k_cycle_get_32();
+		int32_t dt1 = thread_1->base.prio_deadline - now;
+		int32_t dt2 = thread_2->base.prio_deadline - now;
 
 		return dt1 < dt2;
 	}
@@ -1226,7 +1226,7 @@ static inline int32_t z_vrfy_k_sleep(k_timeout_t timeout)
 #include <syscalls/k_sleep_mrsh.c>
 #endif
 
-int32_t z_impl_k_usleep(int us)
+int32_t z_impl_k_usleep(int32_t us)
 {
 	int32_t ticks;
 
@@ -1236,7 +1236,7 @@ int32_t z_impl_k_usleep(int us)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_usleep(int us)
+static inline int32_t z_vrfy_k_usleep(int32_t us)
 {
 	return z_impl_k_usleep(us);
 }
