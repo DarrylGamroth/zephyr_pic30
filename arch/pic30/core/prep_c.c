@@ -29,7 +29,7 @@
  * @return N/A
  */
 
-void _PrepC(void)
+FUNC_NORETURN void _PrepC(void)
 {
 	z_bss_zero();
 //    z_pic30_interrupt_init();

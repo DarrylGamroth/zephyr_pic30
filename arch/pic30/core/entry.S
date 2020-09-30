@@ -1,254 +1,123 @@
-/*
- * Copyright (c) 2018 ispace, inc
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+;; 
+;; C Run-time startup module for MPLAB XC16 C compiler.
+;; (c) Copyright 2016 Microchip Technology, All rights reserved
+;;
+;; Primary version, with data initialization support.
+;; The linker loads this version when the --data-init
+;; option is selected.
+;; 
+;; See file crt1.s for the alternate version without
+;; data initialization support.
+;; 
+;; Entry __reset takes control at device reset and
+;; performs the following:
+;;
+;;  1. initialize stack and stack limit register
+;;  2. initialize PSV window if __const_length > 0
+;;  3. process the data initialization template
+;;  4. call the .user_init section, if it exists
+;;  5. call the user's _main entry point
+;;
+;; Assigned to section .init, which may be allocated
+;; at a specific address in linker scripts. 
+;;
+;; If a local copy of this file is customized, be sure
+;; to choose a file name other than crt0.s or crt1.s.
+;;
 
 #include <toolchain.h>
 #include <autoconf.h>
-#include <arch/sparc/arch.h>
+#include <arch/cpu.h>
 
 /* exports */
-GTEXT(__start)
+GTEXT(__reset)
 
 /* imports */
-GTEXT(z_sparc_prep_c)
-GDATA(_interrupt_stack)
+GTEXT(_PrepC)
+GTEXT(__data_init_extended)
 
-#define RESET_ENTRY(handler)   	 \
-	ba handler;                 \
-	nop;                        \
-	nop;                        \
-	nop;
+SECTION_FUNC(reset, reset_handler)
+	goto __reset
 
-/* task terminating exceptions */
-#define FAULT_TRAP_ENTRY()      \
-	ta 0;                       \
-	nop;                        \
-	nop;                        \
-	nop;
+;;
+;; Initialize stack, PSV, and data
+;; 
+;; registers used:  w0
+;;
+;; Inputs (defined by user or linker):
+;;  __SP_init
+;;  __SPLIM_init
+;; 
+;; Outputs:
+;;  (does not return - resets the processor)
+;; 
+;; Calls:
+;;  __psv_init
+;;  __data_init
+;;  _main
+;; 
 
-/* not implemented */
-#define SOFT_TRAP_ENTRY()       \
-	ta 0;                       \
-	nop;                        \
-	nop;                        \
-	nop;
-
-/* trap not defined. dummy entry */
-#define EMPTY()                 \
-	ta 0;                       \
-	nop;                        \
-	nop;                        \
-	nop;
-
-
-SECTION_FUNC(vector_table, __start)
-
-/* trap table */
-/* 0x00 - 0x0f */
-RESET_ENTRY(reset_handler)       /* 00: reset */
-FAULT_TRAP_ENTRY()               /* 01: inst access exception */
-FAULT_TRAP_ENTRY()               /* 02: illegal inst */
-FAULT_TRAP_ENTRY()               /* 03: priveleged inst */
-
-FAULT_TRAP_ENTRY()               /* 04: fp disabled */
-FAULT_TRAP_ENTRY()               /* 05: window overflow */
-FAULT_TRAP_ENTRY()               /* 06: window underflow */
-FAULT_TRAP_ENTRY()               /* 07: memory access not aligned */
-
-FAULT_TRAP_ENTRY()               /* 08: floating point exveption */
-FAULT_TRAP_ENTRY()               /* 09: data miss exception */
-FAULT_TRAP_ENTRY()               /* 0a: tagged inst overflow */
-FAULT_TRAP_ENTRY()               /* 0b: watchpoint detected */
-
-EMPTY()                          /* 0c: */
-EMPTY()                          /* 0d: */
-EMPTY()                          /* 0e: */
-EMPTY()                          /* 0f: */
-
-/* 0x10 - 0x1f */
-EMPTY()                          /* 10: */
-EMPTY()                          /* 11: irq level 1 */
-EMPTY()                          /* 12: irq level 2 */
-EMPTY()                          /* 13: irq level 3 */
-
-EMPTY()                          /* 14: irq level 4 */
-EMPTY()                          /* 15: irq level 5 */
-EMPTY()                          /* 16: irq level 6 */
-EMPTY()                          /* 17: irq level 7 */
-
-EMPTY()                          /* 18: irq level 8 */
-EMPTY()                          /* 19: irq level 9 */
-EMPTY()                          /* 1a: irq level 10 */
-EMPTY()                          /* 1b: irq level 11 */
-
-EMPTY()                          /* 1c: irq level 12 */
-EMPTY()                          /* 1d: irq level 13 */
-EMPTY()                          /* 1e: irq level 14 */
-EMPTY()                          /* 1f: irq level 15 */
-
-/* 0x20 - 0x2f */
-FAULT_TRAP_ENTRY()               /* 20: r reg access err */
-FAULT_TRAP_ENTRY()               /* 21: inst access err */
-EMPTY()                          /* 22: */
-EMPTY()                          /* 23: */
-
-FAULT_TRAP_ENTRY()               /* 24: co-processor disabled */
-FAULT_TRAP_ENTRY()               /* 25: unimplemented flush */
-EMPTY()                          /* 26: */
-EMPTY()                          /* 27: */
-
-FAULT_TRAP_ENTRY()               /* 28: co-processor exception */
-FAULT_TRAP_ENTRY()               /* 29: data access err */
-FAULT_TRAP_ENTRY()               /* 2a: division by zero */
-FAULT_TRAP_ENTRY()               /* 2b: data store err */
-
-FAULT_TRAP_ENTRY()               /* 2c: data access mmu miss */
-FAULT_TRAP_ENTRY()               /* 2d: */
-EMPTY()                          /* 2e: */
-EMPTY()                          /* 2f: */
-
-/* 0x30 - 0x3f */
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-/* 3c: instruction_access_mmu_miss */
-FAULT_TRAP_ENTRY()   EMPTY() EMPTY() EMPTY()
-/* 0x40 - 0x4f */
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-/* 0x50 - 0x5f */
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-/* 0x60 - 0x6f */
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-/* 0x70 - 0x7f */
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-EMPTY() EMPTY() EMPTY() EMPTY()
-/* 0x80 - 0x8f */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0x90 - 0x9f */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xa0 - 0xaf */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xb0 - 0xbf */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xc0 - 0xcf */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xd0 - 0xdf */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xe0 - 0xef */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-/* 0xf0 - 0xff */
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY() SOFT_TRAP_ENTRY()
-
-
-	.align  32
-
-	/* We assume that both I and D cache are disabled before reaching */
-	/* here. The initialization is in the following order:
-	 *  1) Initialize the special registers (TBR, WIM, PSR)
-	 *  2) Initialize stack and frame pointer
-	 *  3) Enable trap
-	 *  4) Jump to the C World
-	 *
-	 * Once we are done preparing, jump to the C world */
-SECTION_FUNC(text, reset_handler)
-
-	/* Initialize the Trap Base Register */
-	sethi %hi(__start), %g1 /* We have trap vector at __start */
-	mov %g1, %tbr           /* Write to %tbr */
-	nop                     /* %tbr is delayed-write */
-	nop                     /* We assume three delay instructions */
-	nop
-
-	/* Initialize the Window Invalid Mask */
-	mov INIT_WIM, %g1      /* Move INIT_WIM to %g1 */
-	mov %g1, %wim           /* Write to %wim */
-	nop                     /* %wim is delayed-write */
-	nop                     /* We assume three delay instructions */
-	nop
-
-	/* Initialize the Processor State Register */
-	set INIT_PSR, %g1       /* Move INIT_PSR to %g1 */
-	mov %g1, %psr           /* Write to %psr */
-	nop                     /* %psr is delayed-write */
-	nop                     /* We assume three delay instructions */
-	nop
-
-	/* Initialize the stack pointer.  We use _interrupt_stack for
-	 * kernel initialization.  The stack starts at
-	 * _interrupt_stack + CONFIG_ISR_STACK_SIZE.  Because "add"
-	 * instruction can only take simm13, we load both the address
-	 * of _interrupt_stack and the size of it on registers, then
-	 * add them together.  We first initialize %fp here and then
-	 * initialize %sp later. */
-	set _interrupt_stack, %g1       /* Load _interrut_stack to %g1 */
-	set CONFIG_ISR_STACK_SIZE, %g2  /* Load stack size */
-	add %g1, %g2, %fp               /* Add them to calculate the end of */
-					/* the stack as %fp */
+SECTION_FUNC(init, __reset)
 
 #ifdef CONFIG_INIT_STACKS
-	/* Pre-populate all byets in _initerrupt_stack with 0xAA. */
-	/* We use double word store instruction to speed things up. */
-	set 0xaaaaaaaa, %g4	/* Set %g4 first */
-	mov %g4, %g5		/* then, copy it to %g5 */
-fill_aa:
-	std %g4, [%g1]		/* start from low address */
-	inc 8, %g1		/* increment by double word 8 bytes */
-	cmp %g1, %fp		/* did we pass the top of stack? */
-	ble fill_aa		/* go back if not */
-	nop
-#endif /* CONFIG_INIT_STACKS */
+	/* Pre-populate all bytes in z_interrupt_stacks with 0xAA */
+        mov      z_interrupt_stacks,w15
+	mov      #0xaaaa,w14
+	repeat   #CONFIG_ISR_STACK_SIZE
+	mov      w14,[w15++]
+#endif
 
-	/* %sp must be aligned to double word.
-	 * __STD_STACK_FRAME_SIZEOF is aligned to 8 bytes.  Thus, need
-	 * to make sure %fp is aligned. */
-	andn %fp, STACK_ALIGN_SIZE, %fp	/* Drop the LSB bits to round down to */
-					/* 8 bytes */
+        mov      z_interrupt_stacks,w15    ; initialize stack pointer
 
-	/* We must have at least 96 bytes of stack frame on the stack
-	 * _before_ calling a C function.  It is the storage area to
-	 * spill registers on window overflow. Even though we use -mflat
-	 * compiler option for now, it is required. Also note that even
-	 * if we have -fomit-frame-pointer, we are fine having %fp,
-	 * because it'll just be overwritten in the C world. */
-	sub %fp, __STD_STACK_FRAME_SIZEOF, %sp
+#if 0
+	/* FIXME: Don't set SPLIM yet */
+	mov      #CONFIG_ISR_STACK_SIZE, w14
+	add      w14,w15,w14
+        mov      w14,_SPLIM        ; initialize SPLIM
+        nop                        ; wait 1 cycle
+#endif
 
-	/* Stack is ready.  Jump to the C world */
-	ba z_sparc_prep_c
-	nop
+        mov      #__enable_fixed, w0
+        cp0      w0
+        bra      z, CORCON_RESET
+        mov      #0x0010,w0
+        mov      w0,CORCON         ; enable super saturation and clear IF
+
+CORCON_RESET:
+        rcall    __psv_init        ; initialize PSV
+        mov      #__dinit_tbloffset,w0 ; w0,w1 = template
+        mov      #__dinit_tblpage,w1   ;
+        ior      w0,w1,[w15]
+        bra      eq,1f            ; skip if no init table
+
+	rcall    __data_init_extended  ; initialize data
+
+1:
+	/*	
+	 * Jump into C domain. _PrepC zeroes BSS
+	 * and then enters kernel z_cstart
+	 */
+	call _PrepC
+
+;; 
+;; Initialize PSV window if _constlen > 0
+;; 
+;; Registers used:  w0
+;; 
+;; Inputs (defined by linker):
+;;  __const_length
+;;  __const_psvpage
+;; 
+;; Outputs:
+;;  (none)
+;; 
+SECTION_FUNC(init, __psv_init)
+        mov      #__const_length,w0  ; 
+        cp0      w0                  ; test length of constants
+        bra      z,1f                ; br if zero
+
+        mov      #__const_psvpage,w0 ; 
+        mov      w0,_DSRPAG          ; DSRPAG = psvpage(constants)
+
+1:      return                       ;  and exit
+

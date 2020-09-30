@@ -35,7 +35,7 @@
 
 #if defined(__XCC__)
 #include <toolchain/xcc.h>
-#elif defined(__XC16__)
+#elif 1
 #include <toolchain/xc16.h>
 #elif defined(__GNUC__) || (defined(_LINKER) && defined(__GCC_LINKER_CMD__))
 #include <toolchain/gcc.h>

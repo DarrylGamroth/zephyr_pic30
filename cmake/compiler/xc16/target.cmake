@@ -35,7 +35,13 @@ endif()
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/include/lega-c")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/h")
 
-list(APPEND TOOLCHAIN_C_FLAGS -omf=elf -mcpu=GENERIC-16DSP-CH)
+list(APPEND TOOLCHAIN_C_FLAGS -mcpu=GENERIC-16DSP-CH)
+list(APPEND TOOLCHAIN_LD_FLAGS
+	-mcpu=GENERIC-16DSP-CH
+	--handles
+	--no-isr
+	--no-ivt
+	--no-smart-io)
 
 # For CMake to be able to test if a compiler flag is supported by the
 # toolchain we need to give CMake the necessary flags to compile and

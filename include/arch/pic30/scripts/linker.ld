@@ -55,8 +55,6 @@ ENTRY(CONFIG_KERNEL_ENTRY)
 SECTIONS
     {
 
-#include <linker/rel-sections.ld>
-
     GROUP_START(ROMABLE_REGION)
 
 	_image_rom_start = ROM_ADDR;
@@ -211,10 +209,6 @@ SECTIONS
 
     /DISCARD/ : { *(.note.GNU-stack) }
 
-    SECTION_PROLOGUE(.ARM.attributes, 0,)
-	{
-	KEEP(*(.gnu.attributes))
-	}
 
 /* Must be last in romable region */
 SECTION_PROLOGUE(.last_section,(NOLOAD),)

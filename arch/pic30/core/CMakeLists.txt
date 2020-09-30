@@ -14,6 +14,9 @@ zephyr_library()
 #)
 
 zephyr_library_sources(
+  entry.S
+  crt_start_mode_normal.S
+  data_init_extendedch.S
   cpu_idle.c
   fatal.c
   irq_manage.c
