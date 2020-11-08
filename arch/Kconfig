@@ -20,16 +20,19 @@ config ARC
 	bool
 	select ARCH_IS_SET
 	select HAS_DTS
+	imply XIP
 	help
 	  ARC architecture
 
 config ARM
 	bool
 	select ARCH_IS_SET
+	select ARCH_SUPPORTS_COREDUMP if CPU_CORTEX_M
 	select HAS_DTS
 	# FIXME: current state of the code for all ARM requires this, but
 	# is really only necessary for Cortex-M with ARM MPU!
 	select GEN_PRIV_STACKS
+	select ARCH_HAS_THREAD_LOCAL_STORAGE if ARM64 || CPU_CORTEX_R || CPU_CORTEX_M
 	help
 	  ARM architecture
 
@@ -39,7 +42,13 @@ config X86
 	select ATOMIC_OPERATIONS_BUILTIN
 	select HAS_DTS
 	select ARCH_HAS_CUSTOM_SWAP_TO_MAIN if !X86_64
+	select ARCH_SUPPORTS_COREDUMP
 	select CPU_HAS_MMU
+	select ARCH_MEM_DOMAIN_DATA if USERSPACE && !X86_COMMON_PAGE_TABLE
+	select ARCH_MEM_DOMAIN_SYNCHRONOUS_API if USERSPACE
+	select ARCH_HAS_GDBSTUB if !X86_64
+	select ARCH_HAS_TIMING_FUNCTIONS
+	select ARCH_HAS_THREAD_LOCAL_STORAGE
 	help
 	  x86 architecture
 
@@ -48,6 +57,8 @@ config NIOS2
 	select ARCH_IS_SET
 	select ATOMIC_OPERATIONS_C
 	select HAS_DTS
+	imply XIP
+	select ARCH_HAS_TIMING_FUNCTIONS
 	help
 	  Nios II Gen 2 architecture
 
@@ -55,6 +66,8 @@ config RISCV
 	bool
 	select ARCH_IS_SET
 	select HAS_DTS
+	select ARCH_HAS_THREAD_LOCAL_STORAGE
+	imply XIP
 	help
 	  RISCV architecture
 
@@ -225,6 +238,7 @@ config USERSPACE
 	bool "User mode threads"
 	depends on ARCH_HAS_USERSPACE
 	depends on RUNTIME_ERROR_CHECKS
+	select SRAM_REGION_PERMISSIONS if MMU
 	help
 	  When enabled, threads may be created or dropped down to user mode,
 	  which has significantly restricted permissions and must interact
@@ -382,13 +396,43 @@ config IRQ_OFFLOAD
 	  run in interrupt context. Only useful for test cases that need
 	  to validate the correctness of kernel objects in IRQ context.
 
+
+config EXTRA_EXCEPTION_INFO
+	bool "Collect extra exception info"
+	depends on ARCH_HAS_EXTRA_EXCEPTION_INFO
+	help
+	  This option enables the collection of extra information, such as
+	  register state, when a fault occurs. This information can be useful
+	  to collect for post-mortem analysis and debug of issues.
+
 endmenu # Interrupt configuration
+
+config INIT_ARCH_HW_AT_BOOT
+	bool "Initialize internal architecture state at boot"
+	depends on ARCH_SUPPORTS_ARCH_HW_INIT
+	help
+	  This option instructs Zephyr to force the initialization
+	  of the internal architectural state (for example ARCH-level
+	  HW registers and system control blocks) during boot to
+	  the reset values as specified by the corresponding
+	  architecture manual. The option is useful when the Zephyr
+	  firmware image is chain-loaded, for example, by a debugger
+	  or a bootloader, and we need to guarantee that the internal
+	  states of the architecture core blocks are restored to the
+	  reset values (as specified by the architecture).
+
+	  Note: the functionality is architecture-specific. For the
+	  implementation details refer to each architecture where
+	  this feature is supported.
 
 endmenu
 
 #
 # Architecture Capabilities
 #
+
+config ARCH_HAS_TIMING_FUNCTIONS
+	bool
 
 config ARCH_HAS_TRUSTED_EXECUTION
 	bool
@@ -409,6 +453,28 @@ config ARCH_HAS_RAMFUNC_SUPPORT
 	bool
 
 config ARCH_HAS_NESTED_EXCEPTION_DETECTION
+	bool
+
+config ARCH_SUPPORTS_COREDUMP
+	bool
+
+config ARCH_SUPPORTS_ARCH_HW_INIT
+	bool
+
+config ARCH_HAS_EXTRA_EXCEPTION_INFO
+	bool
+
+config ARCH_HAS_GDBSTUB
+	bool
+
+config ARCH_HAS_COHERENCE
+	bool
+	help
+	  When selected, the architecture supports the
+	  arch_mem_coherent() API and can link into incoherent/cached
+	  memory using the ".cached" linker section.
+
+config ARCH_HAS_THREAD_LOCAL_STORAGE
 	bool
 
 #
@@ -505,21 +571,44 @@ config CPU_HAS_MMU
 	help
 	  This hidden option is selected when the CPU has a Memory Management Unit
 	  (MMU).
-
-config MMU
-	bool
+menuconfig MMU
+	bool "Enable MMU features"
 	depends on CPU_HAS_MMU
 	help
 	  This option is enabled when the CPU's memory management unit is active
 	  and the arch_mem_map() API is available.
 
+if MMU
 config MMU_PAGE_SIZE
 	hex "Size of smallest granularity MMU page"
-	depends on MMU
 	default 0x1000
 	help
 	  Size of memory pages. Varies per MMU but 4K is common. For MMUs that
 	  support multiple page sizes, put the smallest one here.
+
+config SRAM_REGION_PERMISSIONS
+	bool "Assign appropriate permissions to kernel areas in SRAM"
+	default y
+	help
+	  If enabled, the program text, rodata, and data parts of the kernel in
+	  the permanent mappings created at build time will have appropriate
+	  permissions set. Uses extra memory due to page-alignment constraints.
+	  If not enabled, all SRAM mappings will allow supervisor mode to
+	  read, write, and execute. User mode support requires this.
+
+config KERNEL_VM_SIZE
+	hex "Size of kernel address space in bytes"
+	default 0xC0000000
+	help
+	  Size of the kernel's address space. Constraining this helps control
+	  how much total memory can be used for page tables.
+
+	  The area defined by SRAM_BASE_ADDRESS to SRAM_BASE_ADDRESS +
+	  KERNEL_VM_SIZE must have enough room to map system RAM, plus any driver
+	  mappings. Further mappings may be made at runtime depending on
+	  configuration options (such as memory-mapping stacks, VDSO pages, etc).
+
+endif   # MMU
 
 config MEMORY_PROTECTION
 	bool

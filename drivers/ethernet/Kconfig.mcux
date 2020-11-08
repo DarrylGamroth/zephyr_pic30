@@ -28,6 +28,13 @@ config ETH_MCUX_RMII_EXT_CLK
 	  Setting this option will configure MCUX clock block to feed RMII
 	  reference clock from external source (ENET_1588_CLKIN)
 
+config ETH_MCUX_NO_PHY_SMI
+	bool "Do not use SMI for PHY communication"
+	help
+	  Some PHY devices, with DSA capabilities do not use SMI for
+	  communication with MAC ENET controller. Other busses - like SPI
+	  or I2C are used instead.
+
 config ETH_MCUX_PHY_TICK_MS
 	int "PHY poll period (ms)"
 	default 1000
@@ -55,17 +62,6 @@ config ETH_MCUX_TX_BUFFERS
 	help
 	  Set the number of TX buffers provided to the MCUX driver.
 
-config ETH_MCUX_0
-	bool "MCUX Ethernet port 0"
-	help
-	  Include port 0 driver
-
-config ETH_MCUX_1
-	bool "MCUX Ethernet port 1"
-	depends on SOC_MIMXRT1062 || SOC_MIMXRT1064
-	help
-	  Include port 1 driver
-
 config ETH_MCUX_HW_ACCELERATION
 	bool "Enable hardware acceleration"
 	help
@@ -80,20 +76,6 @@ config PTP_CLOCK_MCUX
 	  Enable MCUX PTP clock support.
 
 if PTP_CLOCK_MCUX
-
-config ETH_MCUX_PTP_RX_BUFFERS
-	int "Size of the RX timestamp ring buffer"
-	default 10
-	help
-	  Set the number of RX buffers provided to the MCUX driver
-	  to store timestamps.
-
-config ETH_MCUX_PTP_TX_BUFFERS
-	int "Size of the TX timestamp ring buffer"
-	default 10
-	help
-	  Set the number of TX buffers provided to the MCUX driver
-	  to store timestamps.
 
 config ETH_MCUX_PTP_CLOCK_SRC_HZ
 	int "Frequency of the clock source for the PTP timer"

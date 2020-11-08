@@ -55,6 +55,9 @@
 /* Link Layer Advertisement channel maximum PDU buffer size */
 #define PDU_AC_LL_SIZE_MAX     (PDU_AC_LL_HEADER_SIZE + PDU_AC_PAYLOAD_SIZE_MAX)
 
+/* Advertisement channel maximum legacy advertising/scan data size */
+#define PDU_AC_DATA_SIZE_MAX 31
+
 /* Advertisement channel Access Address */
 #define PDU_AC_ACCESS_ADDR     0x8e89bed6
 
@@ -76,6 +79,10 @@
 #define EVENT_MAFS_US           300
 /* Standard allows 2 us timing uncertainty inside the event */
 #define EVENT_MAFS_MAX_US       (EVENT_MAFS_US + 2)
+
+/* Offset Units field encoding */
+#define OFFS_UNIT_30_US         30
+#define OFFS_UNIT_300_US        300
 
 /*
  * Macros to return correct Data Channel PDU time
@@ -159,7 +166,7 @@
 
 struct pdu_adv_adv_ind {
 	uint8_t addr[BDADDR_SIZE];
-	uint8_t data[31];
+	uint8_t data[PDU_AC_DATA_SIZE_MAX];
 } __packed;
 
 struct pdu_adv_direct_ind {
@@ -169,7 +176,7 @@ struct pdu_adv_direct_ind {
 
 struct pdu_adv_scan_rsp {
 	uint8_t addr[BDADDR_SIZE];
-	uint8_t data[31];
+	uint8_t data[PDU_AC_DATA_SIZE_MAX];
 } __packed;
 
 struct pdu_adv_scan_req {
@@ -202,7 +209,6 @@ struct pdu_adv_connect_ind {
 	} __packed;
 } __packed;
 
-#if defined(CONFIG_BT_CTLR_ADV_EXT)
 struct pdu_adv_com_ext_adv {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	uint8_t ext_hdr_len:6;
@@ -310,7 +316,6 @@ struct pdu_adv_sync_info {
 	uint8_t  crc_init[3];
 	uint16_t evt_cntr;
 } __packed;
-#endif /* CONFIG_BT_CTLR_ADV_EXT */
 
 enum pdu_adv_type {
 	PDU_ADV_TYPE_ADV_IND = 0x00,
@@ -629,5 +634,75 @@ struct pdu_data {
 #if defined(CONFIG_BT_CTLR_PROFILE_ISR)
 		struct profile         profile;
 #endif /* CONFIG_BT_CTLR_PROFILE_ISR */
+	} __packed;
+} __packed;
+
+struct pdu_cis {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	uint8_t ll_id:2;
+	uint8_t nesn:1;
+	uint8_t sn:1;
+	uint8_t cie:1;
+	uint8_t rfu0:1;
+	uint8_t npi:1;
+	uint8_t rfu1:1;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	uint8_t rfu1:1;
+	uint8_t npi:1;
+	uint8_t rfu0:1;
+	uint8_t cie:1;
+	uint8_t sn:1;
+	uint8_t nesn:1;
+	uint8_t ll_id:2;
+#else
+#error "Unsupported endianness"
+#endif /* __BYTE_ORDER__ */
+	uint8_t length;
+	uint8_t payload[0];
+} __packed;
+
+enum pdu_big_ctrl_type {
+	PDU_BIG_CTRL_TYPE_CHAN_MAP_IND = 0x00,
+	PDU_BIG_CTRL_TYPE_TERM_IND = 0x01,
+};
+
+struct pdu_big_ctrl_chan_map_ind {
+	uint8_t  chm[5];
+	uint16_t instant;
+} __packed;
+
+struct pdu_big_ctrl_term_ind {
+	uint8_t  reason;
+	uint16_t instant;
+} __packed;
+
+
+struct pdu_big_ctrl {
+	uint8_t opcode;
+	union {
+		uint8_t ctrl_data[0];
+		struct pdu_big_ctrl_chan_map_ind chan_map_ind;
+		struct pdu_big_ctrl_term_ind term_ind;
+	} __packed;
+} __packed;
+
+struct pdu_bis {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	uint8_t ll_id:2;
+	uint8_t cssn:3;
+	uint8_t cstf:1;
+	uint8_t rfu:2;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	uint8_t rfu:2;
+	uint8_t cstf:1;
+	uint8_t cssn:3;
+	uint8_t ll_id:2;
+#else
+#error "Unsupported endianness"
+#endif /* __BYTE_ORDER__ */
+	uint8_t length;
+	union {
+		uint8_t payload[0];
+		struct pdu_big_ctrl ctrl;
 	} __packed;
 } __packed;

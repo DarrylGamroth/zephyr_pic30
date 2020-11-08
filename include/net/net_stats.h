@@ -129,6 +129,9 @@ struct net_stats_tcp {
 	/** Amount of retransmitted data. */
 	net_stats_t resent;
 
+	/** Number of dropped packets at the TCP layer. */
+	net_stats_t drop;
+
 	/** Number of received TCP segments. */
 	net_stats_t recv;
 
@@ -136,7 +139,7 @@ struct net_stats_tcp {
 	net_stats_t sent;
 
 	/** Number of dropped TCP segments. */
-	net_stats_t drop;
+	net_stats_t seg_drop;
 
 	/** Number of TCP segments with a bad checksum. */
 	net_stats_t chkerr;
@@ -224,6 +227,10 @@ struct net_stats_rx_time {
 struct net_stats_tc {
 	struct {
 		struct net_stats_tx_time tx_time;
+#if defined(CONFIG_NET_PKT_TXTIME_STATS_DETAIL)
+		struct net_stats_tx_time
+				tx_time_detail[NET_PKT_DETAIL_STATS_COUNT];
+#endif
 		net_stats_t pkts;
 		net_stats_t bytes;
 		uint8_t priority;
@@ -231,6 +238,10 @@ struct net_stats_tc {
 
 	struct {
 		struct net_stats_rx_time rx_time;
+#if defined(CONFIG_NET_PKT_RXTIME_STATS_DETAIL)
+		struct net_stats_rx_time
+				rx_time_detail[NET_PKT_DETAIL_STATS_COUNT];
+#endif
 		net_stats_t pkts;
 		net_stats_t bytes;
 		uint8_t priority;
@@ -314,6 +325,15 @@ struct net_stats {
 					defined(CONFIG_NET_PKT_TXTIME_STATS)
 	/** Network packet TX time statistics */
 	struct net_stats_tx_time tx_time;
+
+#if defined(CONFIG_NET_PKT_TXTIME_STATS_DETAIL)
+	/** Network packet TX time detail statistics */
+	struct net_stats_tx_time tx_time_detail[NET_PKT_DETAIL_STATS_COUNT];
+#endif
+#if defined(CONFIG_NET_PKT_RXTIME_STATS_DETAIL)
+	/** Network packet RX time detail statistics */
+	struct net_stats_tx_time rx_time_detail[NET_PKT_DETAIL_STATS_COUNT];
+#endif
 #endif
 
 #if defined(CONFIG_NET_PKT_RXTIME_STATS)

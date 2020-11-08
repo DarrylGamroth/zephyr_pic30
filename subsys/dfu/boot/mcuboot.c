@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <assert.h>
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
@@ -207,15 +206,6 @@ static int boot_flag_decode(uint8_t flag)
 }
 
 /* TODO: this function should be moved to flash_area api in future */
-uint8_t flash_area_erased_val(const struct flash_area *fa)
-{
-	#define ERASED_VAL 0xff
-
-	(void)fa;
-	return ERASED_VAL;
-}
-
-/* TODO: this function should be moved to flash_area api in future */
 int flash_area_read_is_empty(const struct flash_area *fa, uint32_t off,
 	void *dst, uint32_t len)
 {
@@ -298,7 +288,7 @@ static int boot_write_trailer_byte(const struct flash_area *fa, uint32_t off,
 	int rc;
 
 	align = flash_area_align(fa);
-	assert(align <= BOOT_MAX_ALIGN);
+	__ASSERT_NO_MSG(align <= BOOT_MAX_ALIGN);
 	erased_val = flash_area_erased_val(fa);
 	memset(buf, erased_val, BOOT_MAX_ALIGN);
 	buf[0] = val;
@@ -640,9 +630,9 @@ int mcuboot_swap_type(void)
 		    (table->copy_done_primary_slot == BOOT_FLAG_ANY  ||
 		     table->copy_done_primary_slot == primary_slot.copy_done)) {
 
-			assert(table->swap_type == BOOT_SWAP_TYPE_TEST ||
-			       table->swap_type == BOOT_SWAP_TYPE_PERM ||
-			       table->swap_type == BOOT_SWAP_TYPE_REVERT);
+			__ASSERT_NO_MSG(table->swap_type == BOOT_SWAP_TYPE_TEST ||
+					table->swap_type == BOOT_SWAP_TYPE_PERM ||
+					table->swap_type == BOOT_SWAP_TYPE_REVERT);
 			return table->swap_type;
 		}
 	}

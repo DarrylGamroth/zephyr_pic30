@@ -99,31 +99,20 @@ def test_xunit_report(class_testsuite, test_data,
     inst2.status = "skipped"
 
     filename = test_data + "sanitycheck.xml"
-    class_testsuite.xunit_report(filename)
+    fails, passes, errors, skips = class_testsuite.xunit_report(filename)
     assert os.path.exists(filename)
 
     filesize = os.path.getsize(filename)
     assert filesize != 0
 
-    fails, passes, errors, skips = 0, 0, 0, 0
-    for instance in class_testsuite.instances.values():
-        if instance.status in ["failed", "timeout"]:
-            if instance.reason in ['build_error', 'handler_crash']:
-                errors += 1
-            else:
-                fails += 1
-        elif instance.status == 'skipped':
-            skips += 1
-        else:
-            passes += 1
-
     tree = ET.parse(filename)
-    assert int(tree.findall('testsuite')[0].attrib["skip"]) == int(skips)
+    assert int(tree.findall('testsuite')[0].attrib["skipped"]) == int(skips)
     assert int(tree.findall('testsuite')[0].attrib["failures"]) == int(fails)
     assert int(tree.findall('testsuite')[0].attrib["errors"]) == int(errors)
     assert int(tree.findall('testsuite')[0].attrib["tests"]) == int(passes+fails+skips+errors)
 
-    for index in range(0, len(class_testsuite.instances)):
+    for index in range(1, len(class_testsuite.instances)+1):
+        # index=0 corresponds to 'properties'. Test cases start from index=1
         if len(list(tree.findall('testsuite')[0][index])) != 0:
             if tree.findall('testsuite')[0][index][0].attrib["type"] == "failure":
                 assert tree.findall('testsuite')[0][index].attrib["name"] == \

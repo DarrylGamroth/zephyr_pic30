@@ -51,6 +51,7 @@
 #include <usb/usb_common.h>
 #include <usb/class/usb_dfu.h>
 #include <usb_descriptor.h>
+#include <usb_work_q.h>
 
 #define LOG_LEVEL CONFIG_USB_DEVICE_LOG_LEVEL
 #include <logging/log.h>
@@ -356,6 +357,8 @@ static void dfu_flash_write(uint8_t *data, size_t len)
 			dfu_data.state = dfuERROR;
 			dfu_data.status = errWRITE;
 		}
+
+		k_poll_signal_raise(&dfu_signal, 0);
 	} else {
 		dfu_data.state = dfuDNLOAD_IDLE;
 	}
@@ -455,19 +458,15 @@ static int dfu_class_handle_req(struct usb_setup_packet *pSetup,
 			dfu_data_worker.worker_state = dfuIDLE;
 			dfu_data_worker.worker_len  = pSetup->wLength;
 			memcpy(dfu_data_worker.buf, *data, pSetup->wLength);
-			k_work_submit(&dfu_work);
+			k_work_submit_to_queue(&USB_WORK_Q, &dfu_work);
 			break;
 		case dfuDNLOAD_IDLE:
 			dfu_data.state = dfuDNBUSY;
 			dfu_data_worker.worker_state = dfuDNLOAD_IDLE;
 			dfu_data_worker.worker_len  = pSetup->wLength;
-			if (dfu_data_worker.worker_len == 0U) {
-				dfu_data.state = dfuMANIFEST_SYNC;
-				k_poll_signal_raise(&dfu_signal, 0);
-			}
 
 			memcpy(dfu_data_worker.buf, *data, pSetup->wLength);
-			k_work_submit(&dfu_work);
+			k_work_submit_to_queue(&USB_WORK_Q, &dfu_work);
 			break;
 		default:
 			LOG_ERR("DFU_DNLOAD wrong state %d", dfu_data.state);
@@ -761,7 +760,7 @@ static void dfu_work_handler(struct k_work *item)
 	}
 }
 
-static int usb_dfu_init(struct device *dev)
+static int usb_dfu_init(const struct device *dev)
 {
 	const struct flash_area *fa;
 

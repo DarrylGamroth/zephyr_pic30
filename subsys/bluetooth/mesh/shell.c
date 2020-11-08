@@ -24,6 +24,7 @@
 /* Private includes for raw Network & Transport layer access */
 #include "mesh.h"
 #include "net.h"
+#include "rpl.h"
 #include "transport.h"
 #include "foundation.h"
 #include "settings.h"
@@ -428,8 +429,30 @@ static int cmd_uuid(const struct shell *shell, size_t argc, char *argv[])
 
 static int cmd_reset(const struct shell *shell, size_t argc, char *argv[])
 {
-	bt_mesh_reset();
-	shell_print(shell, "Local node reset complete");
+	uint16_t addr;
+	if (argc < 2) {
+		return -EINVAL;
+	}
+
+	addr = strtoul(argv[1], NULL, 0);
+
+	if (addr == net.local) {
+		bt_mesh_reset();
+		shell_print(shell, "Local node reset complete");
+	} else {
+		int err;
+		bool reset = false;
+
+		err = bt_mesh_cfg_node_reset(net.net_idx, net.dst, &reset);
+		if (err) {
+			shell_error(shell, "Unable to send "
+					"Remote Node Reset (err %d)", err);
+			return 0;
+		}
+
+		shell_print(shell, "Remote node reset complete");
+	}
+
 	return 0;
 }
 
@@ -499,16 +522,24 @@ static int cmd_poll(const struct shell *shell, size_t argc, char *argv[])
 	return 0;
 }
 
-static void lpn_cb(uint16_t friend_addr, bool established)
+static void lpn_established(uint16_t net_idx, uint16_t friend_addr,
+					uint8_t queue_size, uint8_t recv_win)
 {
-	if (established) {
-		shell_print(ctx_shell, "Friendship (as LPN) established to "
-			    "Friend 0x%04x", friend_addr);
-	} else {
-		shell_print(ctx_shell, "Friendship (as LPN) lost with Friend "
-			    "0x%04x", friend_addr);
-	}
+	shell_print(ctx_shell, "Friendship (as LPN) established to "
+			"Friend 0x%04x Queue Size %d Receive Window %d",
+			friend_addr, queue_size, recv_win);
 }
+
+static void lpn_terminated(uint16_t net_idx, uint16_t friend_addr)
+{
+	shell_print(ctx_shell, "Friendship (as LPN) lost with Friend "
+			"0x%04x", friend_addr);
+}
+
+BT_MESH_LPN_CB_DEFINE(lpn_cb) = {
+	.established = lpn_established,
+	.terminated = lpn_terminated,
+};
 
 #endif /* MESH_LOW_POWER */
 
@@ -543,10 +574,6 @@ static int cmd_init(const struct shell *shell, size_t argc, char *argv[])
 		shell_print(shell, "Use \"pb-adv on\" or \"pb-gatt on\" to "
 			    "enable advertising");
 	}
-
-#if IS_ENABLED(CONFIG_BT_MESH_LOW_POWER)
-	bt_mesh_lpn_set_cb(lpn_cb);
-#endif
 
 	return 0;
 }
@@ -702,20 +729,12 @@ static int cmd_net_send(const struct shell *shell, size_t argc, char *argv[])
 	struct bt_mesh_net_tx tx = {
 		.ctx = &ctx,
 		.src = net.local,
-		.xmit = bt_mesh_net_transmit_get(),
-		.sub = bt_mesh_subnet_get(net.net_idx),
 	};
 	size_t len;
 	int err;
 
 	if (argc < 2) {
 		return -EINVAL;
-	}
-
-	if (!tx.sub) {
-		shell_print(shell, "No matching subnet for NetKey Index 0x%04x",
-			    net.net_idx);
-		return 0;
 	}
 
 	len = hex2bin(argv[1], strlen(argv[1]),
@@ -898,6 +917,46 @@ static int cmd_gatt_proxy(const struct shell *shell, size_t argc, char *argv[])
 	return 0;
 }
 
+static int cmd_net_transmit(const struct shell *shell,
+		size_t argc, char *argv[])
+{
+	uint8_t transmit;
+	int err;
+
+	if (argc < 2) {
+		err = bt_mesh_cfg_net_transmit_get(net.net_idx,
+				net.dst, &transmit);
+	} else {
+		if (argc != 3) {
+			shell_error(shell, "Wrong number of input arguments"
+						"(2 arguments are required)");
+			return -EINVAL;
+		}
+
+		uint8_t count, interval, new_transmit;
+
+		count = strtoul(argv[1], NULL, 0);
+		interval = strtoul(argv[2], NULL, 0);
+
+		new_transmit = BT_MESH_TRANSMIT(count, interval);
+
+		err = bt_mesh_cfg_net_transmit_set(net.net_idx, net.dst,
+				new_transmit, &transmit);
+	}
+
+	if (err) {
+		shell_error(shell, "Unable to send network transmit"
+				" Get/Set (err %d)", err);
+		return 0;
+	}
+
+	shell_print(shell, "Transmit 0x%02x (count %u interval %ums)",
+			transmit, BT_MESH_TRANSMIT_COUNT(transmit),
+			BT_MESH_TRANSMIT_INT(transmit));
+
+	return 0;
+}
+
 static int cmd_relay(const struct shell *shell, size_t argc, char *argv[])
 {
 	uint8_t relay, transmit;
@@ -1035,6 +1094,31 @@ static int cmd_net_key_get(const struct shell *shell, size_t argc, char *argv[])
 	return 0;
 }
 
+static int cmd_net_key_del(const struct shell *shell, size_t argc, char *argv[])
+{
+	uint16_t key_net_idx;
+	uint8_t status;
+	int err;
+
+	key_net_idx = strtoul(argv[1], NULL, 0);
+
+	err = bt_mesh_cfg_net_key_del(net.net_idx, net.dst, key_net_idx,
+				      &status);
+	if (err) {
+		shell_print(shell, "Unable to send NetKeyDel (err %d)", err);
+		return 0;
+	}
+
+	if (status) {
+		shell_print(shell, "NetKeyDel failed with status 0x%02x",
+			    status);
+	} else {
+		shell_print(shell, "NetKey 0x%03x deleted", key_net_idx);
+	}
+
+	return 0;
+}
+
 static int cmd_app_key_add(const struct shell *shell, size_t argc, char *argv[])
 {
 	uint8_t key_val[16];
@@ -1140,6 +1224,37 @@ static int cmd_app_key_get(const struct shell *shell, size_t argc, char *argv[])
 	return 0;
 }
 
+static int cmd_app_key_del(const struct shell *shell, size_t argc, char *argv[])
+{
+	uint16_t key_net_idx, key_app_idx;
+	uint8_t status;
+	int err;
+
+	if (argc < 3) {
+		return -EINVAL;
+	}
+
+	key_net_idx = strtoul(argv[1], NULL, 0);
+	key_app_idx = strtoul(argv[2], NULL, 0);
+
+	err = bt_mesh_cfg_app_key_del(net.net_idx, net.dst, key_net_idx,
+				      key_app_idx, &status);
+	if (err) {
+		shell_error(shell, "Unable to send App Key del(err %d)", err);
+		return 0;
+	}
+
+	if (status) {
+		shell_print(shell, "AppKeyDel failed with status 0x%02x",
+			    status);
+	} else {
+		shell_print(shell, "AppKey deleted, NetKeyIndex 0x%04x "
+			    "AppKeyIndex 0x%04x", key_net_idx, key_app_idx);
+	}
+
+	return 0;
+}
+
 static int cmd_mod_app_bind(const struct shell *shell, size_t argc,
 			    char *argv[])
 {
@@ -1176,6 +1291,48 @@ static int cmd_mod_app_bind(const struct shell *shell, size_t argc,
 			    status);
 	} else {
 		shell_print(shell, "AppKey successfully bound");
+	}
+
+	return 0;
+}
+
+
+static int cmd_mod_app_unbind(const struct shell *shell, size_t argc,
+			    char *argv[])
+{
+	uint16_t elem_addr, mod_app_idx, mod_id, cid;
+	uint8_t status;
+	int err;
+
+	if (argc < 4) {
+		return -EINVAL;
+	}
+
+	elem_addr = strtoul(argv[1], NULL, 0);
+	mod_app_idx = strtoul(argv[2], NULL, 0);
+	mod_id = strtoul(argv[3], NULL, 0);
+
+	if (argc > 4) {
+		cid = strtoul(argv[4], NULL, 0);
+		err = bt_mesh_cfg_mod_app_unbind_vnd(net.net_idx, net.dst,
+						   elem_addr, mod_app_idx,
+						   mod_id, cid, &status);
+	} else {
+		err = bt_mesh_cfg_mod_app_unbind(net.net_idx, net.dst,
+				elem_addr, mod_app_idx, mod_id, &status);
+	}
+
+	if (err) {
+		shell_error(shell, "Unable to send Model App Unbind (err %d)",
+			    err);
+		return 0;
+	}
+
+	if (status) {
+		shell_print(shell, "Model App Unbind failed with status 0x%02x",
+			    status);
+	} else {
+		shell_print(shell, "AppKey successfully unbound");
 	}
 
 	return 0;
@@ -1733,7 +1890,7 @@ static int cmd_hb_pub(const struct shell *shell, size_t argc, char *argv[])
 	}
 }
 
-#if defined(CONFIG_BT_MESH_PROV)
+#if defined(CONFIG_BT_MESH_PROV_DEVICE)
 static int cmd_pb(bt_mesh_prov_bearer_t bearer, const struct shell *shell,
 		  size_t argc, char *argv[])
 {
@@ -2519,7 +2676,7 @@ static int cmd_cdb_app_key_del(const struct shell *shell, size_t argc,
 SHELL_STATIC_SUBCMD_SET_CREATE(mesh_cmds,
 	/* General operations */
 	SHELL_CMD_ARG(init, NULL, NULL, cmd_init, 1, 0),
-	SHELL_CMD_ARG(reset, NULL, NULL, cmd_reset, 1, 0),
+	SHELL_CMD_ARG(reset, NULL, "<addr>", cmd_reset, 2, 0),
 #if defined(CONFIG_BT_MESH_LOW_POWER)
 	SHELL_CMD_ARG(lpn, NULL, "<value: off, on>", cmd_lpn, 2, 0),
 	SHELL_CMD_ARG(poll, NULL, NULL, cmd_poll, 1, 0),
@@ -2574,16 +2731,25 @@ SHELL_STATIC_SUBCMD_SET_CREATE(mesh_cmds,
 	SHELL_CMD_ARG(net-key-add, NULL, "<NetKeyIndex> [val]", cmd_net_key_add,
 		      2, 1),
 	SHELL_CMD_ARG(net-key-get, NULL, NULL, cmd_net_key_get, 1, 0),
+	SHELL_CMD_ARG(net-key-del, NULL, "<NetKeyIndex>", cmd_net_key_del, 2,
+		      0),
 	SHELL_CMD_ARG(app-key-add, NULL, "<NetKeyIndex> <AppKeyIndex> [val]",
 		      cmd_app_key_add, 3, 1),
+	SHELL_CMD_ARG(app-key-del, NULL, "<NetKeyIndex> <AppKeyIndex>",
+		      cmd_app_key_del, 3, 0),
 	SHELL_CMD_ARG(app-key-get, NULL, "<NetKeyIndex>", cmd_app_key_get, 2,
 		      0),
+	SHELL_CMD_ARG(net-transmit-param, NULL, "[<count: 0-7>"
+			" <interval: 10-320>]", cmd_net_transmit, 1, 2),
 	SHELL_CMD_ARG(mod-app-bind, NULL,
 		      "<addr> <AppIndex> <Model ID> [Company ID]",
 		      cmd_mod_app_bind, 4, 1),
 	SHELL_CMD_ARG(mod-app-get, NULL,
 		      "<elem addr> <Model ID> [Company ID]",
 		      cmd_mod_app_get, 3, 1),
+	SHELL_CMD_ARG(mod-app-unbind, NULL,
+		      "<addr> <AppIndex> <Model ID> [Company ID]",
+		      cmd_mod_app_unbind, 4, 1),
 	SHELL_CMD_ARG(mod-pub, NULL, "<addr> <mod id> [cid] [<PubAddr> "
 		      "<AppKeyIndex> <cred: off, on> <ttl> <period> <count> <interval>]",
 		      cmd_mod_pub, 3, 1 + 7),
@@ -2664,4 +2830,4 @@ static int cmd_mesh(const struct shell *shell, size_t argc, char **argv)
 }
 
 SHELL_CMD_ARG_REGISTER(mesh, &mesh_cmds, "Bluetooth Mesh shell commands",
-		       cmd_mesh, 1, 1);
+			cmd_mesh, 1, 1);

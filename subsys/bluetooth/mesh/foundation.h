@@ -129,10 +129,6 @@ void bt_mesh_heartbeat(uint16_t src, uint16_t dst, uint8_t hops, uint16_t feat);
 
 void bt_mesh_attention(struct bt_mesh_model *model, uint8_t time);
 
-struct label *get_label(uint16_t index);
-
-uint8_t *bt_mesh_label_uuid_get(uint16_t addr);
-
 struct bt_mesh_hb_pub *bt_mesh_hb_pub_get(void);
 void bt_mesh_hb_pub_disable(void);
 struct bt_mesh_cfg_srv *bt_mesh_cfg_get(void);
@@ -144,11 +140,6 @@ uint8_t bt_mesh_relay_retransmit_get(void);
 uint8_t bt_mesh_beacon_get(void);
 uint8_t bt_mesh_gatt_proxy_get(void);
 uint8_t bt_mesh_default_ttl_get(void);
-
-void bt_mesh_subnet_del(struct bt_mesh_subnet *sub, bool store);
-
-struct bt_mesh_app_key *bt_mesh_app_key_alloc(uint16_t app_idx);
-void bt_mesh_app_key_del(struct bt_mesh_app_key *key, bool store);
 
 #include <sys/byteorder.h>
 

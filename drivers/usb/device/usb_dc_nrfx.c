@@ -20,9 +20,9 @@
 #include <drivers/usb/usb_dc.h>
 #include <usb/usb_device.h>
 #include <drivers/clock_control.h>
-#include <hal/nrf_power.h>
 #include <drivers/clock_control/nrf_clock_control.h>
 #include <nrfx_usbd.h>
+#include <nrfx_power.h>
 
 
 #define LOG_LEVEL CONFIG_USB_DRIVER_LOG_LEVEL
@@ -282,7 +282,7 @@ K_FIFO_DEFINE(usbd_evt_fifo);
  * of a system work queue item waiting for a USB transfer to be finished.
  */
 static struct k_work_q usbd_work_queue;
-static K_THREAD_STACK_DEFINE(usbd_work_queue_stack,
+static K_KERNEL_STACK_DEFINE(usbd_work_queue_stack,
 			     CONFIG_USB_NRFX_WORK_QUEUE_STACK_SIZE);
 
 
@@ -493,22 +493,22 @@ static inline struct usbd_event *usbd_evt_alloc(void)
 	return ev;
 }
 
-void usb_dc_nrfx_power_event_callback(nrf_power_event_t event)
+static void usb_dc_power_event_handler(nrfx_power_usb_evt_t event)
 {
 	enum usbd_periph_state new_state;
 
 	switch (event) {
-	case NRF_POWER_EVENT_USBDETECTED:
+	case NRFX_POWER_USB_EVT_DETECTED:
 		new_state = USBD_ATTACHED;
 		break;
-	case NRF_POWER_EVENT_USBPWRRDY:
+	case NRFX_POWER_USB_EVT_READY:
 		new_state = USBD_POWERED;
 		break;
-	case NRF_POWER_EVENT_USBREMOVED:
+	case NRFX_POWER_USB_EVT_REMOVED:
 		new_state = USBD_DETACHED;
 		break;
 	default:
-		LOG_ERR("Unknown USB power event");
+		LOG_ERR("Unknown USB power event %d", event);
 		return;
 	}
 
@@ -1127,6 +1127,9 @@ static void usbd_event_handler(nrfx_usbd_evt_t const *const p_event)
 		break;
 	case NRFX_USBD_EVT_WUREQ:
 		LOG_DBG("RemoteWU initiated");
+		evt.evt_type = USBD_EVT_POWER;
+		evt.evt.pwr_evt.state = USBD_RESUMED;
+		put_evt = true;
 		break;
 	case NRFX_USBD_EVT_RESET:
 		evt.evt_type = USBD_EVT_RESET;
@@ -1202,19 +1205,20 @@ static inline void usbd_reinit(void)
 	int ret;
 	nrfx_err_t err;
 
-	nrf5_power_usb_power_int_enable(false);
+	nrfx_power_usbevt_disable();
 	nrfx_usbd_disable();
 	nrfx_usbd_uninit();
 
 	usbd_evt_flush();
+
 	ret = eps_ctx_init();
 	__ASSERT_NO_MSG(ret == 0);
 
-	nrf5_power_usb_power_int_enable(true);
+	nrfx_power_usbevt_enable();
 	err = nrfx_usbd_init(usbd_event_handler);
 
 	if (err != NRFX_SUCCESS) {
-		LOG_DBG("nRF USBD driver reinit failed. Code: %d", (uint32_t)err);
+		LOG_DBG("nRF USBD driver reinit failed. Code: %d", err);
 		__ASSERT_NO_MSG(0);
 	}
 }
@@ -1329,15 +1333,12 @@ int usb_dc_attach(void)
 		return 0;
 	}
 
-	k_work_q_start(&usbd_work_queue,
-		       usbd_work_queue_stack,
-		       K_THREAD_STACK_SIZEOF(usbd_work_queue_stack),
-		       CONFIG_SYSTEM_WORKQUEUE_PRIORITY);
-
-	k_work_init(&ctx->usb_work, usbd_work_handler);
 	k_mutex_init(&ctx->drv_lock);
 	ctx->hfxo_mgr =
-		z_nrf_clock_control_get_onoff(CLOCK_CONTROL_NRF_SUBSYS_HF);
+		z_nrf_clock_control_get_onoff(
+			COND_CODE_1(NRF_CLOCK_HAS_HFCLK192M,
+				    (CLOCK_CONTROL_NRF_SUBSYS_HF192M),
+				    (CLOCK_CONTROL_NRF_SUBSYS_HF)));
 
 	IRQ_CONNECT(DT_INST_IRQN(0), DT_INST_IRQ(0, priority),
 		    nrfx_isr, nrfx_usbd_irq_handler, 0);
@@ -1348,7 +1349,7 @@ int usb_dc_attach(void)
 		LOG_DBG("nRF USBD driver init failed. Code: %d", (uint32_t)err);
 		return -EIO;
 	}
-	nrf5_power_usb_power_int_enable(true);
+	nrfx_power_usbevt_enable();
 
 	ret = eps_ctx_init();
 	if (ret == 0) {
@@ -1359,7 +1360,7 @@ int usb_dc_attach(void)
 		usbd_work_schedule();
 	}
 
-	if (nrf_power_usbregstatus_vbusdet_get(NRF_POWER)) {
+	if (nrfx_power_usbstatus_get() != NRFX_POWER_USB_STATE_DISCONNECTED) {
 		/* USBDETECTED event is be generated on cable attachment and
 		 * when cable is already attached during reset, but not when
 		 * the peripheral is re-enabled.
@@ -1367,7 +1368,7 @@ int usb_dc_attach(void)
 		 * will not receive this event and it needs to be generated
 		 * again here.
 		 */
-		usb_dc_nrfx_power_event_callback(NRF_POWER_EVENT_USBDETECTED);
+		usb_dc_power_event_handler(NRFX_POWER_USB_EVT_DETECTED);
 	}
 
 	return ret;
@@ -1391,7 +1392,7 @@ int usb_dc_detach(void)
 	}
 
 	(void)hfxo_stop(ctx);
-	nrf5_power_usb_power_int_enable(false);
+	nrfx_power_usbevt_disable();
 
 	ctx->attached = false;
 	k_mutex_unlock(&ctx->drv_lock);
@@ -1558,6 +1559,11 @@ int usb_dc_ep_clear_stall(const uint8_t ep)
 		return -EINVAL;
 	}
 
+	if (NRF_USBD_EPISO_CHECK(ep)) {
+		/* ISO transactions do not support a handshake phase. */
+		return -EINVAL;
+	}
+
 	nrfx_usbd_ep_dtoggle_clear(ep_addr_to_nrfx(ep));
 	nrfx_usbd_ep_stall_clear(ep_addr_to_nrfx(ep));
 	LOG_DBG("Unstall on EP 0x%02x", ep);
@@ -1605,7 +1611,12 @@ int usb_dc_ep_enable(const uint8_t ep)
 		return -EINVAL;
 	}
 
-	nrfx_usbd_ep_dtoggle_clear(ep_addr_to_nrfx(ep));
+	if (!NRF_USBD_EPISO_CHECK(ep)) {
+		/* ISO transactions for full-speed device do not support
+		 * toggle sequencing and should only send DATA0 PID.
+		 */
+		nrfx_usbd_ep_dtoggle_clear(ep_addr_to_nrfx(ep));
+	}
 	if (ep_ctx->cfg.en) {
 		return -EALREADY;
 	}
@@ -1920,3 +1931,47 @@ int usb_dc_wakeup_request(void)
 	}
 	return 0;
 }
+
+static int usb_init(const struct device *arg)
+{
+	struct nrf_usbd_ctx *ctx = get_usbd_ctx();
+
+#ifdef CONFIG_HAS_HW_NRF_USBREG
+	/* Use CLOCK/POWER priority for compatibility with other series where
+	 * USB events are handled by CLOCK interrupt handler.
+	 */
+	IRQ_CONNECT(USBREGULATOR_IRQn,
+		    DT_IRQ(DT_INST(0, nordic_nrf_clock), priority),
+		    nrfx_isr, nrfx_usbreg_irq_handler, 0);
+	irq_enable(USBREGULATOR_IRQn);
+#endif
+
+	static const nrfx_power_config_t power_config = {
+		.dcdcen = IS_ENABLED(CONFIG_SOC_DCDC_NRF52X) ||
+			  IS_ENABLED(CONFIG_SOC_DCDC_NRF53X_APP),
+#if NRFX_POWER_SUPPORTS_DCDCEN_VDDH
+		.dcdcenhv = IS_ENABLED(CONFIG_SOC_DCDC_NRF53X_HV),
+#endif
+	};
+
+	static const nrfx_power_usbevt_config_t usbevt_config = {
+		.handler = usb_dc_power_event_handler
+	};
+
+	/* Ignore the return value, as NRFX_ERROR_ALREADY_INITIALIZED is not
+	 * a problem here.
+	 */
+	(void)nrfx_power_init(&power_config);
+	nrfx_power_usbevt_init(&usbevt_config);
+
+	k_work_q_start(&usbd_work_queue,
+		usbd_work_queue_stack,
+		K_KERNEL_STACK_SIZEOF(usbd_work_queue_stack),
+		CONFIG_SYSTEM_WORKQUEUE_PRIORITY);
+
+	k_work_init(&ctx->usb_work, usbd_work_handler);
+
+	return 0;
+}
+
+SYS_INIT(usb_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEVICE);
