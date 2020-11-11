@@ -74,10 +74,10 @@ manifest:
       revision: b52fdbf4b62439be9fab9bb4bae9690a42d2fb14
       path: modules/hal/st
     - name: hal_stm32
-      revision: a0267470e786019e378be18f5786e53ef307497f
+      revision: 80cd7b0d956ca778bd7acf1d9465b44d25e62d57
       path: modules/hal/stm32
     - name: hal_ti
-      revision: 405dfc8faba13e01c1cb9e29e70b31b50f71d117
+      revision: 277d70a65ab14d46bf1ec0935cf9bb28bbaa8ab9
       path: modules/hal/ti
     - name: libmetal
       revision: 9d4ee2c3cfd5f49861939447990f3b7d7bf9bf94
@@ -87,7 +87,7 @@ manifest:
       revision: 7deb3aab1cc430a7650143f9833cfc8ddad76eb5
       path: modules/hal/quicklogic
     - name: lvgl
-      revision: 9339a1331cc36e82c180d8277ab22953282595d9
+      revision: 31acbaa36e9e74ab88ac81e3d21e7f1d00a71136
       path: modules/lib/gui/lvgl
     - name: mbedtls
       revision: e3e135f89693a0342bbc72f31a4e00cdf36c3977
@@ -96,7 +96,7 @@ manifest:
       revision: c71d2186077f9fd5f6d1aa53ee3f09dc41ce78f6
       path: bootloader/mcuboot
     - name: mcumgr
-      revision: 1e5e3ecd5b836183e9970991ab2c8f38c5e60298
+      revision: f28a637db12c4b12fb2b18bddc6b2a0deaa95251
       path: modules/lib/mcumgr
     - name: net-tools
       revision: 1c4fdba512b268033a4cf926bddd323866c3261a

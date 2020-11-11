@@ -213,19 +213,40 @@ uint8_t ll_adv_aux_sr_data_set(uint8_t handle, uint8_t op, uint8_t frag_pref, ui
 		return ull_scan_rsp_set(adv, len, data);
 	}
 
-	/* Can only set complete data and cannot discard data on enabled set */
-	if (adv->is_enabled && ((op != BT_HCI_LE_EXT_ADV_OP_COMPLETE_DATA) ||
-				(len == 0))) {
-		return BT_HCI_ERR_CMD_DISALLOWED;
-	}
-
 	LL_ASSERT(lll->aux);
+
 	aux_pdu = lll_adv_aux_data_peek(lll->aux);
-	sr_prev = lll_adv_scan_rsp_peek(lll);
 
 	/* Can only discard data on non-scannable instances */
 	if (!(aux_pdu->adv_ext_ind.adv_mode & BT_HCI_LE_ADV_PROP_SCAN) && len) {
 		return BT_HCI_ERR_INVALID_PARAM;
+	}
+
+	/* Data can be discarded only using 0x03 op */
+	if ((op != BT_HCI_LE_EXT_ADV_OP_COMPLETE_DATA) && !len) {
+		return BT_HCI_ERR_INVALID_PARAM;
+	}
+
+	/* Can only set complete data if advertising is enabled */
+	if (adv->is_enabled && (op != BT_HCI_LE_EXT_ADV_OP_COMPLETE_DATA)) {
+		return BT_HCI_ERR_CMD_DISALLOWED;
+	}
+
+	/* Cannot discard scan response if scannable advertising is enabled */
+	if (adv->is_enabled &&
+	    (aux_pdu->adv_ext_ind.adv_mode & BT_HCI_LE_ADV_PROP_SCAN) && !len) {
+		return BT_HCI_ERR_CMD_DISALLOWED;
+	}
+
+	/* If no length is provided, discard data */
+	if (!len) {
+		sr_pdu = lll_adv_scan_rsp_alloc(lll, &idx);
+		sr_pdu->type = PDU_ADV_TYPE_AUX_SCAN_RSP;
+		sr_pdu->len = 0;
+
+		lll_adv_scan_rsp_enqueue(&adv->lll, idx);
+
+		return 0;
 	}
 
 	/* Update scan response PDU fields. */
@@ -248,6 +269,8 @@ uint8_t ll_adv_aux_sr_data_set(uint8_t handle, uint8_t op, uint8_t frag_pref, ui
 	sr_hdr->adi = 1;
 #endif
 	sr_dptr++;
+
+	sr_prev = lll_adv_scan_rsp_peek(lll);
 
 	/* AdvA */
 	memcpy(sr_dptr, &sr_prev->adv_ext_ind.ext_hdr_adi_adv_data[1],
@@ -337,6 +360,7 @@ uint8_t ll_adv_aux_set_remove(uint8_t handle)
 		struct ll_adv_aux_set *aux;
 
 		aux = (void *)HDR_LLL2EVT(lll->aux);
+		lll->aux = NULL;
 
 		ull_adv_aux_release(aux);
 	}
@@ -642,7 +666,7 @@ uint8_t ull_adv_aux_hdr_set_clear(struct ll_adv_set *adv,
 	sec_pdu->len = sec_len + ad_len;
 
 	/* Check AdvData overflow */
-	if (sec_pdu->len > CONFIG_BT_CTLR_ADV_DATA_LEN_MAX) {
+	if (sec_pdu->len > PDU_AC_PAYLOAD_SIZE_MAX) {
 		/* FIXME: release allocations */
 		return BT_HCI_ERR_PACKET_TOO_LONG;
 	}
@@ -875,6 +899,7 @@ struct ll_adv_aux_set *ull_adv_aux_acquire(struct lll_adv *lll)
 {
 	struct lll_adv_aux *lll_aux;
 	struct ll_adv_aux_set *aux;
+	int err;
 
 	aux = aux_acquire();
 	if (!aux) {
@@ -884,6 +909,12 @@ struct ll_adv_aux_set *ull_adv_aux_acquire(struct lll_adv *lll)
 	lll_aux = &aux->lll;
 	lll->aux = lll_aux;
 	lll_aux->adv = lll;
+
+	lll_adv_data_reset(&lll_aux->data);
+	err = lll_adv_data_init(&lll_aux->data);
+	if (err) {
+		return NULL;
+	}
 
 	/* NOTE: ull_hdr_init(&aux->ull); is done on start */
 	lll_hdr_init(lll_aux, aux);
@@ -895,6 +926,7 @@ struct ll_adv_aux_set *ull_adv_aux_acquire(struct lll_adv *lll)
 
 void ull_adv_aux_release(struct ll_adv_aux_set *aux)
 {
+	lll_adv_data_release(&aux->lll.data);
 	aux_release(aux);
 }
 
