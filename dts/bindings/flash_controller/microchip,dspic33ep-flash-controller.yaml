@@ -1,0 +1,5 @@
+description: dsPIC33EP Family flash controller
+
+compatible: "microchip,dspic33ep-flash-controller.yaml"
+
+include: flash-controller.yaml
