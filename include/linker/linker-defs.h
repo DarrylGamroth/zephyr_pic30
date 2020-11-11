@@ -38,14 +38,14 @@
 
 #ifdef _LINKER
 #define Z_LINK_ITERABLE(struct_type) \
-	_CONCAT(_##struct_type, _list_start) = .; \
+	SYMBOL(_CONCAT(_##struct_type, _list_start)) = .; \
 	KEEP(*(SORT_BY_NAME(._##struct_type.static.*))); \
-	_CONCAT(_##struct_type, _list_end) = .
+	SYMBOL(_CONCAT(_##struct_type, _list_end)) = .
 
 #define Z_LINK_ITERABLE_GC_ALLOWED(struct_type) \
-	_CONCAT(_##struct_type, _list_start) = .; \
+	SYMBOL(_CONCAT(_##struct_type, _list_start)) = .; \
 	*(SORT_BY_NAME(._##struct_type.static.*)); \
-	_CONCAT(_##struct_type, _list_end) = .
+	SYMBOL(_CONCAT(_##struct_type, _list_end)) = .
 
 /* Define an output section which will set up an iterable area
  * of equally-sized data structures. For use with Z_STRUCT_SECTION_ITERABLE.
@@ -115,7 +115,7 @@
  * no direct reference to them
  */
 #define CREATE_OBJ_LEVEL(object, level)				\
-		__##object##_##level##_start = .;		\
+		SYMBOL(__##object##_##level##_start) = .;		\
 		KEEP(*(SORT(.object##_##level[0-9]*)));		\
 		KEEP(*(SORT(.object##_##level[1-9][0-9]*)));
 

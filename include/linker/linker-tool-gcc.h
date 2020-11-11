@@ -49,8 +49,18 @@
 	/* Not needed */
 #elif defined(CONFIG_ARCH_POSIX)
 	/* Not needed */
+#elif defined(CONFIG_PIC30)
+	/* Not needed */
 #else
 	#error Arch not supported.
+#endif
+
+/*
+ * XC16 linker doesn't have the following directives
+ */
+#if defined(CONFIG_PIC30)
+#define ASSERT(x, y)
+#define SUBALIGN(x)		ALIGN(x)
 #endif
 
 /*
@@ -112,8 +122,11 @@
  * own parameter since it needs abstraction across the different toolchains.
  * If not required, the <options> and <align> parameters should be left blank.
  */
-
+#if defined(CONFIG_PIC30)
+#define SECTION_PROLOGUE(name, options, align) name options align :
+#else
 #define SECTION_PROLOGUE(name, options, align) name options : align
+#endif
 
 /*
  * As for SECTION_PROLOGUE(), except that this one must (!) be used
@@ -122,15 +135,27 @@
  * program startup).  Such a section must (!) also use
  * GROUP_LINK_IN_LMA to specify the correct output load address.
  */
+
+#if defined (CONFIG_PIC30)
+#define SECTION_DATA_PROLOGUE(name, options, align) \
+	name options align :
+#else
 #ifdef CONFIG_XIP
 #define SECTION_DATA_PROLOGUE(name, options, align) \
 	name options : ALIGN_WITH_INPUT align
 #else
 #define SECTION_DATA_PROLOGUE(name, options, align) name options : align
 #endif
+#endif /*CONFIG_PIC30*/
 
 #define SORT_BY_NAME(x) SORT(x)
 
 #define COMMON_SYMBOLS *(COMMON)
+
+#if defined (CONFIG_PIC30)
+#define SYMBOL(x)	_CONCAT(_, x)
+#else
+#define SYMBOL(x)	x
+#endif
 
 #endif /* ZEPHYR_INCLUDE_LINKER_LINKER_TOOL_GCC_H_ */

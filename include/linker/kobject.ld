@@ -27,7 +27,7 @@
 
 #ifndef LINKER_PASS2
 #ifdef CONFIG_DYNAMIC_OBJECTS
-	PROVIDE(_thread_idx_map = .);
+	PROVIDE(SYMBOL(_thread_idx_map) = .);
 	. += CONFIG_MAX_THREAD_BYTES;
 #endif
 #endif
@@ -43,9 +43,9 @@
 #ifdef CONFIG_GEN_PRIV_STACKS
 	SECTION_DATA_PROLOGUE(priv_stacks_noinit,,)
 	{
-	z_priv_stacks_ram_start = .;
+	SYMBOL(z_priv_stacks_ram_start) = .;
 	*(".priv_stacks.noinit")
-	z_priv_stacks_ram_end = .;
+	SYMBOL(z_priv_stacks_ram_end) = .;
 	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 #endif /* CONFIG_GEN_PRIV_STACKS */
 #endif /* CONFIG_USERSPACE */

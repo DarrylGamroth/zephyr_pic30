@@ -8,13 +8,13 @@
 		 * sorted in the order they will be initialized (i.e. ordered
 		 * by level, sorted by priority within a level)
 		 */
-		__init_start = .;
+		SYMBOL(__init_start) = .;
 		CREATE_OBJ_LEVEL(init, PRE_KERNEL_1)
 		CREATE_OBJ_LEVEL(init, PRE_KERNEL_2)
 		CREATE_OBJ_LEVEL(init, POST_KERNEL)
 		CREATE_OBJ_LEVEL(init, APPLICATION)
 		CREATE_OBJ_LEVEL(init, SMP)
-		__init_end = .;
+		SYMBOL(__init_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 #if defined(CONFIG_GEN_SW_ISR_TABLE) && !defined(CONFIG_DYNAMIC_INTERRUPTS)
@@ -67,9 +67,9 @@
 	SECTION_PROLOGUE(init_array,,)
 	{
 		. = ALIGN(4);
-		__init_array_start = .;
+		SYMBOL(__init_array_start) = .;
 		KEEP(*(SORT_BY_NAME(".init_array*")))
-		__init_array_end = .;
+		SYMBOL(__init_array_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 #endif
 #ifdef CONFIG_USERSPACE
@@ -81,9 +81,9 @@
 
 	SECTION_DATA_PROLOGUE(app_shmem_regions,,)
 	{
-		__app_shmem_regions_start = .;
+		SYMBOL(__app_shmem_regions_start) = .;
 		KEEP(*(SORT(.app_regions.*)));
-		__app_shmem_regions_end = .;
+		SYMBOL(__app_shmem_regions_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 #if defined(CONFIG_NET_SOCKETS)
@@ -128,9 +128,9 @@
 #if defined(CONFIG_EMUL)
 	SECTION_DATA_PROLOGUE(log_const_sections,,)
 	{
-		__emul_list_start = .;
+		SYMBOL(__emul_list_start) = .;
 		KEEP(*(SORT_BY_NAME(".emulators")));
-		__emul_list_end = .;
+		SYMBOL(__emul_list_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 #endif /* CONFIG_EMUL */
 
@@ -140,32 +140,32 @@
 
 	SECTION_DATA_PROLOGUE(log_const_sections,,)
 	{
-		__log_const_start = .;
+		SYMBOL(__log_const_start) = .;
 		KEEP(*(SORT(.log_const_*)));
-		__log_const_end = .;
+		SYMBOL(__log_const_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 	SECTION_DATA_PROLOGUE(log_backends_sections,,)
 	{
-		__log_backends_start = .;
+		SYMBOL(__log_backends_start) = .;
 		KEEP(*("._log_backend.*"));
-		__log_backends_end = .;
+		SYMBOL(__log_backends_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 	Z_ITERABLE_SECTION_ROM(shell, 4)
 
 	SECTION_DATA_PROLOGUE(shell_root_cmds_sections,,)
 	{
-		__shell_root_cmds_start = .;
+		SYMBOL(__shell_root_cmds_start) = .;
 		KEEP(*(SORT(.shell_root_cmd_*)));
-		__shell_root_cmds_end = .;
+		SYMBOL(__shell_root_cmds_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 	SECTION_DATA_PROLOGUE(font_entry_sections,,)
 	{
-		__font_entry_start = .;
+		SYMBOL(__font_entry_start) = .;
 		KEEP(*(SORT_BY_NAME("._cfb_font.*")))
-		__font_entry_end = .;
+		SYMBOL(__font_entry_end) = .;
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 	Z_ITERABLE_SECTION_ROM(tracing_backend, 4)

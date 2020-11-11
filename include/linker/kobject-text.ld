@@ -8,17 +8,17 @@
 	 * The linker will error out complaining that the location pointer
 	 * is moving backwards if the reserved room isn't large enough.
 	 */
-	_kobject_text_area_start = .;
+	SYMBOL(_kobject_text_area_start) = .;
 	*(".kobject_data.text*")
-	_kobject_text_area_end = .;
-	_kobject_text_area_used = _kobject_text_area_end - _kobject_text_area_start;
+	SYMBOL(_kobject_text_area_end) = .;
+	SYMBOL(_kobject_text_area_used) = SYMBOL(_kobject_text_area_end) - SYMBOL(_kobject_text_area_start);
 #ifndef LINKER_PASS2
 #ifdef CONFIG_DYNAMIC_OBJECTS
-	PROVIDE(z_object_gperf_find = .);
-	PROVIDE(z_object_gperf_wordlist_foreach = .);
+	PROVIDE(SYMBOL(z_object_gperf_find) = .);
+	PROVIDE(SYMBOL(z_object_gperf_wordlist_foreach) = .);
 #else
-	PROVIDE(z_object_find = .);
-	PROVIDE(z_object_wordlist_foreach = .);
+	PROVIDE(SYMBOL(z_object_find) = .);
+	PROVIDE(SYMBOL(z_object_wordlist_foreach) = .);
 #endif
 #endif
 
@@ -28,7 +28,7 @@
 	location counter, and then detect the overflow with an assertion
 	later on. */
 
-	. = MAX(., _kobject_text_area_start + CONFIG_KOBJECT_TEXT_AREA);
+	. = MAX(., SYMBOL(_kobject_text_area_start) + CONFIG_KOBJECT_TEXT_AREA);
 
 	ASSERT(
 		CONFIG_KOBJECT_TEXT_AREA >= _kobject_text_area_used,
