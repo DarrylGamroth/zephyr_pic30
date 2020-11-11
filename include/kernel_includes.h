@@ -42,9 +42,7 @@
 #include <fatal.h>
 #include <irq.h>
 #include <sys/thread_stack.h>
-#if FIXME  
 #include <app_memory/mem_domain.h>
-#endif
 #include <sys/kobject.h>
 
 #endif /* ZEPHYR_INCLUDE_KERNEL_INCLUDES_H_ */
