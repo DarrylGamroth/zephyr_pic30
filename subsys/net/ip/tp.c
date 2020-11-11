@@ -300,7 +300,7 @@ uint32_t tp_seq_track(int kind, uint32_t *pvalue, int req,
 	seq->old_value = *pvalue;
 
 	if (req > 0) {
-		seq->of = __builtin_uadd_overflow(seq->old_value, seq->req,
+		seq->of = u32_add_overflow(seq->old_value, seq->req,
 							&seq->value);
 	} else {
 		seq->value += req;

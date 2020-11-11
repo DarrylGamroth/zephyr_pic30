@@ -115,7 +115,7 @@ uint32_t z_log_get_s_mask(const char *str, uint32_t nargs)
  */
 static bool is_rodata(const void *addr)
 {
-#if defined(CONFIG_ARM) || defined(CONFIG_ARC) || defined(CONFIG_X86)
+#if defined(CONFIG_ARM) || defined(CONFIG_ARC) || defined (CONFIG_PIC30) || defined(CONFIG_X86)
 	extern const char *_image_rodata_start[];
 	extern const char *_image_rodata_end[];
 	#define RO_START _image_rodata_start
@@ -162,7 +162,7 @@ static void detect_missed_strdup(struct log_msg *msg)
 	mask = z_log_get_s_mask(msg_str, log_msg_nargs_get(msg));
 
 	while (mask) {
-		idx = 31 - __builtin_clz(mask);
+		idx = 31 - u32_count_leading_zeros(mask);
 		str = (const char *)log_msg_arg_get(msg, idx);
 		if (!is_rodata(str) && !log_is_strdup(str) &&
 			(str != log_strdup_fail_msg)) {
@@ -415,7 +415,7 @@ void log_generic(struct log_msg_ids src_level, const char *fmt, va_list ap,
 			uint32_t mask = z_log_get_s_mask(fmt, nargs);
 
 			while (mask) {
-				uint32_t idx = 31 - __builtin_clz(mask);
+				uint32_t idx = 31 - u32_count_leading_zeros(mask);
 				const char *str = (const char *)args[idx];
 
 				/* is_rodata(str) is not checked,

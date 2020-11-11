@@ -10,5 +10,10 @@
 / {
 	model = "Microchip DM330030 dsPIC33CK Curiosity";
 	compatible = "dspic33c,dm330030", "microchip,dspic33ck256mp508";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+	};
 };
 

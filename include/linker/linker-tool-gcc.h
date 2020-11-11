@@ -47,8 +47,6 @@
 #endif
 #elif defined(CONFIG_XTENSA)
 	/* Not needed */
-#elif defined(CONFIG_PIC30)
-	OUTPUT_ARCH("pic30")
 #elif defined(CONFIG_ARCH_POSIX)
 	/* Not needed */
 #else

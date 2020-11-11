@@ -22,21 +22,11 @@
     uint16_t accbl;     \
     uint16_t accbh;     \
     uint16_t accbu;     \
-    uint16_t dcount;    \
-    uint16_t dostartl;  \
-    uint16_t dostarth;  \
-    uint16_t doendl;    \
-    uint16_t doendh;    \
     uint16_t dsrpag;    \
     uint16_t dswpag;
 
 /* Initial saved state. */
 #define SOC_ESF_INIT						\
-	0,						\
-	0,						\
-	0,						\
-	0,						\
-	0,						\
 	0,						\
 	0,						\
 	0,						\

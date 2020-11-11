@@ -39,7 +39,7 @@
 #elif defined(__LITTLE_ENDIAN__) || defined(__ARMEL__) || \
       defined(__THUMBEL__) || defined(__AARCH64EL__) || \
       defined(__MIPSEL__) || defined(__TC32EL__) || \
-      defined(__PIC30__)
+      defined(__XC16__)
 
 #define __BYTE_ORDER__                  __ORDER_LITTLE_ENDIAN__
 

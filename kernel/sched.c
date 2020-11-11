@@ -1107,7 +1107,7 @@ struct k_thread *z_priq_mq_best(struct _priq_mq *pq)
 	}
 
 	struct k_thread *thread = NULL;
-	sys_dlist_t *l = &pq->queues[__builtin_ctz(pq->bitmask)];
+	sys_dlist_t *l = &pq->queues[u32_count_trailing_zeros(pq->bitmask)];
 	sys_dnode_t *n = sys_dlist_peek_head(l);
 
 	if (n != NULL) {

@@ -53,7 +53,7 @@ struct k_thread *z_priq_rb_best(struct _priq_rb *pq);
  */
 struct _priq_mq {
 	sys_dlist_t queues[32];
-	unsigned int bitmask; /* bit 1<<i set if queues[i] is non-empty */
+	uint32_t bitmask; /* bit 1<<i set if queues[i] is non-empty */
 };
 
 void z_priq_mq_add(struct _priq_mq *pq, struct k_thread *thread);

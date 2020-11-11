@@ -15,11 +15,11 @@
  * initialization is performed.
  */
 
-#include <stddef.h>
-#include <toolchain.h>
-#include <kernel_structs.h>
+#include <kernel.h>
 #include <kernel_internal.h>
+#include <linker/linker-defs.h>
 
+extern FUNC_NORETURN void z_cstart(void);
 /**
  *
  * @brief Prepare to and run C code
@@ -28,8 +28,7 @@
  *
  * @return N/A
  */
-
-FUNC_NORETURN void _PrepC(void)
+FUNC_NORETURN void z_pic30_prep_c(void)
 {
 	z_bss_zero();
 //    z_pic30_interrupt_init();

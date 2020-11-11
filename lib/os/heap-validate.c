@@ -246,7 +246,7 @@ static size_t rand_alloc_size(struct z_heap_stress_rec *sr)
 	/* Min scale of 4 means that the half of the requests in the
 	 * smallest size have an average size of 8
 	 */
-	int scale = 4 + __builtin_clz(rand32());
+	int scale = 4 + u32_count_leading_zeros(rand32());
 
 	return rand32() & ((1 << scale) - 1);
 }

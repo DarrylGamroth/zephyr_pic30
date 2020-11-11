@@ -209,7 +209,7 @@ static chunkid_t alloc_chunk(struct z_heap *h, size_t sz)
 	size_t bmask = h->avail_buckets & ~((1 << (bi + 1)) - 1);
 
 	if ((bmask & h->avail_buckets) != 0U) {
-		int minbucket = __builtin_ctz(bmask & h->avail_buckets);
+		int minbucket = u32_count_trailing_zeros(bmask & h->avail_buckets);
 		chunkid_t c = h->buckets[minbucket].next;
 
 		free_list_remove_bidx(h, c, minbucket);

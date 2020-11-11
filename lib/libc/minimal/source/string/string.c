@@ -367,7 +367,9 @@ void *memset(void *buf, int c, size_t n)
 	mem_word_t c_word = (mem_word_t)c_byte;
 
 	c_word |= c_word << 8;
+#if Z_MEM_WORD_T_WIDTH > 16
 	c_word |= c_word << 16;
+#endif
 #if Z_MEM_WORD_T_WIDTH > 32
 	c_word |= c_word << 32;
 #endif

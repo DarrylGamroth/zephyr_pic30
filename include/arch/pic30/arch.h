@@ -16,6 +16,7 @@
 
 #include <arch/pic30/thread.h>
 #include <arch/pic30/exp.h>
+#include <arch/common/sys_bitops.h>
 #include <arch/common/sys_io.h>
 #include <arch/common/ffs.h>
 

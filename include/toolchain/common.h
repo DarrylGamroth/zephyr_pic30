@@ -79,7 +79,7 @@
 
   #elif defined(CONFIG_PIC30)
 
-    #define PERFOPT_ALIGN .balign  2
+    #define PERFOPT_ALIGN .align  2
 
   #elif defined(CONFIG_ARCH_POSIX)
 

@@ -14,7 +14,7 @@
 /* Add include for DTS generated information */
 #include <devicetree.h>
 
-#include <xc.h>
+//#include <xc.h>
 
 #endif /* _ASMLANGUAGE */
 

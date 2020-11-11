@@ -35,13 +35,13 @@ endif()
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/include/lega-c")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/h")
 
-list(APPEND TOOLCHAIN_C_FLAGS -mcpu=GENERIC-16DSP-CH)
-list(APPEND TOOLCHAIN_LD_FLAGS
-	-mcpu=GENERIC-16DSP-CH
-	--handles
-	--no-isr
-	--no-ivt
-	--no-smart-io)
+list(APPEND TOOLCHAIN_C_FLAGS -mcpu=33CK256MP508 -save-temps -Wl,-no-leading-underscore)
+list(APPEND TOOLCHAIN_LD_FLAGS NO_SPLIT -mcpu=33CK256MP508 --handles)
+#	-mcpu=33CK256MP508
+#	--handles
+#	--no-isr
+#	--no-ivt
+#	--no-smart-io)
 
 # For CMake to be able to test if a compiler flag is supported by the
 # toolchain we need to give CMake the necessary flags to compile and
@@ -70,16 +70,3 @@ list(APPEND CMAKE_REQUIRED_FLAGS
   )
 string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
 
-# Load toolchain_cc-family macros
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_freestanding.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_security_fortify.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_security_canaries.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_optimizations.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_cpp.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_asm.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_baremetal.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_warnings.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_imacros.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_base.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_coverage.cmake)
-include(${ZEPHYR_BASE}/cmake/compiler/${COMPILER}/target_sanitizers.cmake)

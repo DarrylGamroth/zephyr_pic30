@@ -10,6 +10,7 @@
 
 #ifndef _ASMLANGUAGE
 
+#include <sys/math_extras.h> 
 #include <zephyr/types.h>
 
 #ifdef __cplusplus
@@ -34,7 +35,7 @@ static ALWAYS_INLINE unsigned int find_msb_set(uint32_t op)
 		return 0;
 	}
 
-	return 32 - __builtin_clz(op);
+	return 32 - u32_count_leading_zeros(op);
 }
 
 

@@ -31,9 +31,10 @@
 
 /* exports */
 GTEXT(__reset)
+GTEXT(__start)
 
 /* imports */
-GTEXT(_PrepC)
+GTEXT(_z_pic30_prep_c)
 GTEXT(__data_init_extended)
 
 SECTION_FUNC(reset, reset_handler)
@@ -58,6 +59,7 @@ SECTION_FUNC(reset, reset_handler)
 ;; 
 
 SECTION_FUNC(init, __reset)
+SECTION_FUNC(init, __start)
 
 #ifdef CONFIG_INIT_STACKS
 	/* Pre-populate all bytes in z_interrupt_stacks with 0xAA */
@@ -97,7 +99,7 @@ CORCON_RESET:
 	 * Jump into C domain. _PrepC zeroes BSS
 	 * and then enters kernel z_cstart
 	 */
-	call _PrepC
+	call _z_pic30_prep_c
 
 ;; 
 ;; Initialize PSV window if _constlen > 0

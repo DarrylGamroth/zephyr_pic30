@@ -42,9 +42,6 @@ GTEXT(__data_init_extended)
 ;; for PIC24F devices with extended data memory
 ;;
 
-        .equ __data_init, __data_init_extended
-        .global __data_init
-
 SECTION_FUNC(init, __data_init_extended)
 
         ; for all format codes, hi-bit set means there is a DST page at

@@ -2256,7 +2256,7 @@ static uint8_t hb_log(uint16_t val)
 	} else if (val == 0xffff) {
 		return 0xff;
 	} else {
-		return 32 - __builtin_clz(val);
+		return 32 - u32_count_leading_zeros(val);
 	}
 }
 
@@ -2269,7 +2269,7 @@ static uint8_t hb_pub_count_log(uint16_t val)
 	} else if (val == 0xffff) {
 		return 0xff;
 	} else {
-		return 32 - __builtin_clz(val - 1) + 1;
+		return 32 - u32_count_leading_zeros(val - 1) + 1;
 	}
 }
 

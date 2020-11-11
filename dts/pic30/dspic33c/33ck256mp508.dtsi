@@ -8,9 +8,16 @@
 #include <dspic33c/33ckxxxmpxxx.dtsi>
 
 / {
+	sram0: memory@1000 {
+		reg = <0x1000	DT_SIZE_K(24)>;
+	};
+
 	soc {
-		sram0: memory@1000 {
-			reg = <0x1000	DT_SIZE_K(24)>;
+		flash-controller@8d0 {
+			flash0: flash@0 {
+				reg = <0x0 DT_SIZE_K(256)>;
+			};
 		};
 	};
+
 };
