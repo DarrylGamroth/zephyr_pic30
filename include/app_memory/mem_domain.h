@@ -19,7 +19,7 @@ extern "C" {
 
 /* Forward declaration */
 struct k_thread;
-typedef struct k_thread *k_tid_t;
+typedef struct k_thread *k_tid_tFIXME;
 
 /**
  * @defgroup mem_domain_apis Memory domain APIs
@@ -194,7 +194,7 @@ extern void k_mem_domain_remove_partition(struct k_mem_domain *domain,
  *
  */
 extern void k_mem_domain_add_thread(struct k_mem_domain *domain,
-				    k_tid_t thread);
+				    k_tid_tFIXME thread);
 
 /**
  * @brief Remove a thread from its memory domain.
@@ -205,7 +205,7 @@ extern void k_mem_domain_add_thread(struct k_mem_domain *domain,
  * @param thread ID of thread going to be removed from its memory domain.
  */
 __deprecated
-extern void k_mem_domain_remove_thread(k_tid_t thread);
+extern void k_mem_domain_remove_thread(k_tid_tFIXME thread);
 
 #ifdef __cplusplus
 }
