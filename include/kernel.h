@@ -186,7 +186,7 @@ struct _thread_base {
 	};
 
 #ifdef CONFIG_SCHED_DEADLINE
-	int prio_deadline;
+	int32_t prio_deadline;
 #endif
 
 	uint32_t order_key;
@@ -1006,7 +1006,7 @@ __syscall void k_thread_priority_set(k_tid_t thread, int prio);
  * @param deadline A time delta, in cycle units
  *
  */
-__syscall void k_thread_deadline_set(k_tid_t thread, int deadline);
+__syscall void k_thread_deadline_set(k_tid_t thread, int32_t deadline);
 #endif
 
 #ifdef CONFIG_SCHED_CPU_MASK

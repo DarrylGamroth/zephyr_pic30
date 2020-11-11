@@ -1200,7 +1200,7 @@ static inline void z_vrfy_k_thread_priority_set(k_tid_t thread, int prio)
 #endif
 
 #ifdef CONFIG_SCHED_DEADLINE
-void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
+void z_impl_k_thread_deadline_set(k_tid_t tid, int32_t deadline)
 {
 	struct k_thread *thread = tid;
 
@@ -1214,7 +1214,7 @@ void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int deadline)
+static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int32_t deadline)
 {
 	struct k_thread *thread = tid;
 
