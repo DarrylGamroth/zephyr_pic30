@@ -5,3 +5,4 @@ if(SOC_FAMILY)
 else()
   add_subdirectory(${SOC_NAME})
 endif()
+

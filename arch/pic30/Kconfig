@@ -1,5 +1,6 @@
 # PIC30 architecture configuration options
 
+# Copyright (c) 2020 Rubus Technologies Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 menu "PIC30 Options"
@@ -12,68 +13,77 @@ config ARCH
 # CPU Families - the SoC configuration should select the right one.
 #
 
-config PLATFORM_SPECIFIC_INIT
-	bool "Enable platform (SOC) specific startup hook"
+config CPU_PIC24E
+	bool
 	help
-	  The platform specific initialization code (z_platform_init) is executed
-	  at the beginning of the startup code (__start).
+	  This option signifies the use of a CPU from the PIC24E family.
 
-config BUILTIN_STACK_GUARD
-	bool "Thread Stack Guards based on built-in stack limit checking"
+config CPU_PIC24F
+	bool
+	help
+	  This option signifies the use of a CPU from the PIC24F family.
+
+config CPU_PIC24H
+	bool
+	help
+	  This option signifies the use of a CPU from the PIC24H family.
+
+config CPU_DSPIC33C
+	bool
+	help
+	  This option signifies the use of a CPU from the dsPIC33C family.
+
+config CPU_DSPIC33E
+	bool
+	help
+	  This option signifies the use of a CPU from the dsPIC33E family.
+
+config CPU_DSPIC33F
+	bool
+	help
+	  This option signifies the use of a CPU from the dsPIC33F family.
+
+config DYNAMIC_DIRECT_INTERRUPTS
+	bool "Enable support for dynamic direct interrupts"
+	depends on DYNAMIC_INTERRUPTS
+	help
+	  Direct interrupts are designed for performance-critical interrupt
+	  handling and do not go through all of the common interrupt handling
+	  code. This option enables the installation of interrupt service
+	  routines for direct interrupts at runtime.
+	  Note: this requires enabling support for dynamic interrupts in the
+	  kernel.
+
+config FAULT_DUMP
+	int "Fault dump level"
+	default 2
+	range 0 2
+	help
+	  Different levels for display information when a fault occurs.
+
+	  2: The default. Display specific and verbose information. Consumes
+		the most memory (long strings).
+
+	  1: Display general and short information. Consumes less memory
+		(short strings).
+
+	  0: Off.
+
+config ZERO_LATENCY_IRQS
+	bool "Enable zero-latency interrupts"
 	default y
-	select THREAD_STACK_INFO
 	help
-	  Enable Thread/Interrupt Stack Guards via built-in Stack Pointer
-	  limit checking.
-	
-menu "PIC30 Processor Options"
-
-config PIC30_SOC_CONTEXT_SAVE
-	bool "Enable SOC-based context saving in IRQ handlers"
-	select PIC30_SOC_OFFSETS
-	help
-	  Enable low-level SOC-specific context management, for SOCs
-	  with extra state that must be saved when entering an
-	  interrupt/exception, and restored on exit. If unsure, leave
-	  this at the default value.
-
-	  Enabling this option requires that the SoC provide a
-	  soc_context.h header which defines the following macros:
-
-	  - SOC_ESF_MEMBERS: structure component declarations to
-	    allocate space for. The last such declaration should not
-	    end in a semicolon, for portability. The generic PIC30 
-	    architecture code will allocate space for these members in
-	    a "struct soc_esf" type (typedefed to soc_esf_t), which will
-	    be available if arch.h is included.
-
-	  - SOC_ESF_INIT: structure contents initializer for struct soc_esf
-	    state. The last initialized member should not end in a comma.
-
-	  The generic architecture IRQ wrapper will also call
-	  \_\_soc_save_context and \_\_soc_restore_context routines at
-	  ISR entry and exit, respectively. These should typically
-	  be implemented in assembly. If they were C functions, they
-	  would have these signatures:
-
-	  ``void __soc_save_context(soc_esf_t *state);``
-
-	  ``void __soc_restore_context(soc_esf_t *state);``
-
-	  The calls obey standard calling conventions; i.e., the state
-	  pointer address is in a0, and ra contains the return address.
-
-config PIC30_SOC_OFFSETS
-	bool "Enable SOC-based offsets"
-	help
-	  Enabling this option requires that the SoC provide a soc_offsets.h
-	  header which defines the following macros:
-
-	  - GEN_SOC_OFFSET_SYMS(): a macro which expands to
-	    GEN_OFFSET_SYM(soc_esf_t, soc_specific_member) calls
-	    to ensure offset macros for SOC_ESF_MEMBERS are defined
-	    in offsets.h. The last one should not end in a semicolon.
-	    See gen_offset.h for more details.
+	  The kernel may reserve some of the highest interrupts priorities in
+	  the system for its own use. These interrupts will not be masked
+	  by interrupt locking.
+	  When connecting interrupts the kernel will offset all interrupts
+	  to lower priority than those reserved by the kernel.
+	  Zero-latency interrupt can be used to set up an interrupt at the
+	  highest interrupt priority which will not be blocked by interrupt
+	  locking.
+	  Since Zero-latency ISRs will run in the same priority or possibly at
+	  higher priority than the rest of the kernel they cannot use any
+	  kernel functionality.
 
 config GEN_ISR_TABLES
 	default y
@@ -81,9 +91,10 @@ config GEN_ISR_TABLES
 config GEN_IRQ_VECTOR_TABLE
 	default n
 
+config GEN_IRQ_START_VECTOR
+	default 0
+
 config NUM_IRQS
 	int
-
-endmenu
 
 endmenu

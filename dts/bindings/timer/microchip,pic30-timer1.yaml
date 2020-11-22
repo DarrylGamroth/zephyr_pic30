@@ -1,0 +1,18 @@
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: Microchip PIC30 Timer 1
+
+compatible: "microchip,pic30-timer1"
+
+include: base.yaml
+
+properties:
+    reg:
+      required: true
+
+    interrupts:
+      required: true
+
+    label:
+      required: true

@@ -35,7 +35,7 @@
 
 #if defined(__XCC__)
 #include <toolchain/xcc.h>
-#elif defined(__XC16_VERSION__) || (defined(_LINKER) && defined(__XC16_LINKER_CMD__))
+#elif defined(__XC16_VERSION__)
 /* __XC16__ isn't defined for the assembler */
 #include <toolchain/xc16.h>
 #elif defined(__CCAC__)

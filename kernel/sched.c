@@ -16,6 +16,7 @@
 #include <kernel_internal.h>
 #include <logging/log.h>
 #include <sys/atomic.h>
+#include <sys/math_extras.h>
 LOG_MODULE_DECLARE(os);
 
 /* Maximum time between the time a self-aborting thread flags itself

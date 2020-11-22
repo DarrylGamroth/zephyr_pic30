@@ -2,26 +2,18 @@
 
 zephyr_library()
 
-#zephyr_library_sources(
-#  cpu_idle.c
-#  fatal.c
-#  irq_manage.c
-#  isr.S
-#  prep_c.c
-#  reset.S
-#  swap.S
-#  thread.c
-#)
-
 zephyr_library_sources(
-  entry.S
-  crt_start_mode_normal.S
-  data_init_extendedch.S
-  cpu_idle.c
   fatal.c
+  irq_init.c
   irq_manage.c
   prep_c.c
+  reset.S
+  switch.S
   thread.c
+  vector_table.S
+  cpu_idle.S
+  data_init_extendedch.S
 )
 
+zephyr_library_sources_ifdef(CONFIG_GEN_SW_ISR_TABLE isr_wrapper.S)
 zephyr_library_sources_ifdef(CONFIG_IRQ_OFFLOAD irq_offload.c)

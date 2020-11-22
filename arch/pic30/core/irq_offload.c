@@ -4,26 +4,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <irq.h>
-#include <irq_offload.h>
+/**
+ * @file
+ * @brief Software interrupts utility code - PIC30 implementation
+ */
 
-static irq_offload_routine_t _offload_routine;
+#include <kernel.h>
+#include <irq_offload.h>
+#include <aarch64/exc.h>
+
+volatile irq_offload_routine_t offload_routine;
 static const void *offload_param;
 
 void z_irq_do_offload(void)
 {
-    offload_routine(offload_param);
+	offload_routine(offload_param);
 }
 
 void arch_irq_offload(irq_offload_routine_t routine, const void *parameter)
 {
-	unsigned int key;
-
-	key = irq_lock();
-	_offload_routine = routine;
+	k_sched_lock();
+	offload_routine = routine;
 	offload_param = parameter;
 
-	__asm__ volatile ("bset INTCON2,#13");
+	z_pic30_offload();
 
-	irq_unlock(key);
+	offload_routine = NULL;
+	k_sched_unlock();
 }

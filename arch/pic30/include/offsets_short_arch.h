@@ -9,14 +9,4 @@
 
 #include <offsets.h>
 
-/* kernel */
-
-/* nothing for now */
-
-/* end - kernel */
-
-/* threads */
-
-/* end - threads */
-
 #endif /* ZEPHYR_ARCH_PIC30_INCLUDE_OFFSETS_SHORT_ARCH_H_ */

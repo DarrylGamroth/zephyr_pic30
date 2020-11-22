@@ -1,16 +1,11 @@
 /*
- * Copyright (c) 2013-2014 Wind River Systems, Inc.
- * Copyright (c) 2020 Stephanos Ioannidis <root@stephanos.io>
+ * Copyright (c) 2020 Rubus Technologies Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * @file
- * @brief ARM Cortex-M and Cortex-R wrapper for ISRs with parameter
- *
- * Wrapper installed in vector table for handling dynamic interrupts that accept
- * a parameter.
+/*
+ * PIC30 ISRs wrapper
  */
 
 #include <toolchain.h>
@@ -18,214 +13,104 @@
 #include <offsets_short.h>
 #include <arch/cpu.h>
 #include <sw_isr_table.h>
-
-
-_ASM_FILE_PROLOGUE
+#include "macro_priv.inc"
 
 GDATA(_sw_isr_table)
 
-GTEXT(_isr_wrapper)
-GTEXT(z_arm_int_exit)
-
-/**
- *
- * @brief Wrapper around ISRs when inserted in software ISR table
+/*
+ * Wrapper around ISRs when inserted in software ISR table
  *
  * When inserted in the vector table, _isr_wrapper() demuxes the ISR table
  * using the running interrupt number as the index, and invokes the registered
  * ISR with its corresponding argument. When returning from the ISR, it
- * determines if a context switch needs to happen (see documentation for
- * z_arm_pendsv()) and pends the PendSV exception if so: the latter will
- * perform the context switch itself.
- *
- * @return N/A
+ * determines if a context switch needs to happen.
  */
-SECTION_FUNC(TEXT, _isr_wrapper)
 
-#if defined(CONFIG_CPU_CORTEX_M)
-	push {r0,lr}		/* r0, lr are now the first items on the stack */
-#elif defined(CONFIG_CPU_CORTEX_R)
-	/*
-	 * Save away r0-r3, r12 and lr_irq for the previous context to the
-	 * process stack since they are clobbered here.  Also, save away lr
-	 * and spsr_irq since we may swap processes and return to a different
-	 * thread.
-	 */
-	sub lr, lr, #4
-	srsdb #MODE_SYS!
-	cps #MODE_SYS
-	push {r0-r3, r12, lr}
+GTEXT(_isr_wrapper)
+SECTION_FUNC(isr, _isr_wrapper)
+	z_pic30_enter_exc
 
-	/*
-	 * Use SVC mode stack for predictable interrupt behaviour; running ISRs
-	 * in the SYS/USR mode stack (i.e. interrupted thread stack) leaves the
-	 * ISR stack usage at the mercy of the interrupted thread and this can
-	 * be prone to stack overflows if any of the ISRs and/or preemptible
-	 * threads have high stack usage.
-	 *
-	 * When userspace is enabled, this also prevents leaking privileged
-	 * information to the user mode.
-	 */
-	cps #MODE_SVC
+	/* ++(_kernel->nested) to be checked by arch_is_in_isr() */
 
-	/* Align stack at double-word boundary */
-	and r3, sp, #4
-	sub sp, sp, r3
-	push {r2, r3}
-
-	/* Increment interrupt nesting count */
-	ldr r2, =_kernel
-	ldr r0, [r2, #_kernel_offset_to_nested]
-	add r0, r0, #1
-	str r0, [r2, #_kernel_offset_to_nested]
-#endif /* CONFIG_CPU_CORTEX_M */
-
-#ifdef CONFIG_EXECUTION_BENCHMARKING
-	bl read_timer_start_of_isr
+#ifdef CONFIG_TRACING
+	call	_sys_trace_isr_enter
 #endif
 
-#ifdef CONFIG_TRACING_ISR
-	bl sys_trace_isr_enter
-#endif
-
-#ifdef CONFIG_SYS_POWER_MANAGEMENT
+	/* Switch to the IRQ stack */
 	/*
-	 * All interrupts are disabled when handling idle wakeup.  For tickless
-	 * idle, this ensures that the calculation and programming of the
-	 * device for the next timer deadline is not interrupted.  For
-	 * non-tickless idle, this ensures that the clearing of the kernel idle
-	 * state is not interrupted.  In each case, z_sys_power_save_idle_exit
-	 * is called with interrupts disabled.
+	 * Set the SPLIM register to the top of RAM so it won't trigger
+	 * the Stack Error Trap.
+	 * SPLIM<0> is always 0
 	 */
+	setm	SPLIM
+	nop
 
-#if defined(CONFIG_CPU_CORTEX_M)
-	/*
-	 * Disable interrupts to prevent nesting while exiting idle state. This
-	 * is only necessary for the Cortex-M because it is the only ARM
-	 * architecture variant that automatically enables interrupts when
-	 * entering an ISR.
-	 */
-	cpsid i  /* PRIMASK = 1 */
-#endif
-
-	/* is this a wakeup from idle ? */
-	ldr r2, =_kernel
-	/* requested idle duration, in ticks */
-	ldr r0, [r2, #_kernel_offset_to_idle]
-	cmp r0, #0
-
-#if defined(CONFIG_ARMV6_M_ARMV8_M_BASELINE)
-	beq _idle_state_cleared
-	movs.n r1, #0
-	/* clear kernel idle state */
-	str r1, [r2, #_kernel_offset_to_idle]
-	bl z_sys_power_save_idle_exit
-_idle_state_cleared:
-
-#elif defined(CONFIG_ARMV7_M_ARMV8_M_MAINLINE)
-	ittt ne
-	movne	r1, #0
-		/* clear kernel idle state */
-		strne	r1, [r2, #_kernel_offset_to_idle]
-		blne	z_sys_power_save_idle_exit
-#elif defined(CONFIG_ARMV7_R)
-	beq _idle_state_cleared
-	movs r1, #0
-	/* clear kernel idle state */
-	str r1, [r2, #_kernel_offset_to_idle]
-	bl z_sys_power_save_idle_exit
-_idle_state_cleared:
-#else
-#error Unknown ARM architecture
-#endif /* CONFIG_ARMV6_M_ARMV8_M_BASELINE */
-
-#if defined(CONFIG_CPU_CORTEX_M)
-	cpsie i		/* re-enable interrupts (PRIMASK = 0) */
-#endif
-
-#endif /* CONFIG_SYS_POWER_MANAGEMENT */
-
-#if defined(CONFIG_CPU_CORTEX_M)
-	mrs r0, IPSR	/* get exception number */
-#if defined(CONFIG_ARMV6_M_ARMV8_M_BASELINE)
-	ldr r1, =16
-	subs r0, r1	/* get IRQ number */
-	lsls r0, #3	/* table is 8-byte wide */
-#elif defined(CONFIG_ARMV7_M_ARMV8_M_MAINLINE)
-	sub r0, r0, #16	/* get IRQ number */
-	lsl r0, r0, #3	/* table is 8-byte wide */
-#endif /* CONFIG_ARMV6_M_ARMV8_M_BASELINE */
-#elif defined(CONFIG_CPU_CORTEX_R)
 	/* Get active IRQ number from the interrupt controller */
-#if !defined(CONFIG_ARM_CUSTOM_INTERRUPT_CONTROLLER)
-	bl arm_gic_get_active
-#else
-	bl z_soc_irq_get_active
-#endif /* !CONFIG_ARM_CUSTOM_INTERRUPT_CONTROLLER */
-	push {r0, r1}
-	lsl r0, r0, #3	/* table is 8-byte wide */
-#else
-#error Unknown ARM architecture
-#endif /* CONFIG_CPU_CORTEX_M */
+	mov	INTTREG, w0
+	and	#0xff, w0
 
-#if !defined(CONFIG_CPU_CORTEX_M)
-	/*
-	 * Enable interrupts to allow nesting.
-	 *
-	 * Note that interrupts are disabled up to this point on the ARM
-	 * architecture variants other than the Cortex-M. It is also important
-	 * to note that that most interrupt controllers require that the nested
-	 * interrupts are handled after the active interrupt is acknowledged;
-	 * this is be done through the `get_active` interrupt controller
-	 * interface function.
-	 */
-	cpsie i
-#endif /* !CONFIG_CPU_CORTEX_M */
+	/* Calculate the IFSx array offset */
+	lsr	w0, #4, w1
 
-	ldr r1, =_sw_isr_table
-	add r1, r1, r0	/* table entry: ISRs must have their MSB set to stay
-			 * in thumb mode */
+	/* Calculate the IFSx bit offset */
+	and	w0, #0xf, w2
 
-	ldm r1!,{r0,r3}	/* arg in r0, ISR in r3 */
-#ifdef CONFIG_EXECUTION_BENCHMARKING
-	push {r0, r3}	/* Save r0 and r3 into stack */
-	bl read_timer_end_of_isr
-	pop {r0, r3}	/* Restore r0 and r3 regs */
-#endif /* CONFIG_EXECUTION_BENCHMARKING */
-	blx r3		/* call ISR */
+	/* Calculate bit mask */
+	mov	#1, w3
+	sl	w3, w2, w2
+	com	w2, w2
 
-#if defined(CONFIG_CPU_CORTEX_R)
-	/* Signal end-of-interrupt */
-	pop {r0, r1}
-#if !defined(CONFIG_ARM_CUSTOM_INTERRUPT_CONTROLLER)
-	bl arm_gic_eoi
-#else
-	bl z_soc_irq_eoi
-#endif /* !CONFIG_ARM_CUSTOM_INTERRUPT_CONTROLLER */
-#endif /* CONFIG_CPU_CORTEX_R */
+	/* Get the IFSx base address and add the offset */
+	mov	#IFS0, w3
+	add	w3, w1, w3
 
-#ifdef CONFIG_TRACING_ISR
-	bl sys_trace_isr_exit
+	/* Apply the bitmask */
+	and	w2, [w3], [w3]
+	
+	/* Retrieve the interrupt service routine */
+	mov	__sw_isr_table, w1
+	mov	[w0+w1], w2
+	mov.d	[w2], w0	/* arg in w0, ISR in w2 */
+
+	/* Acknowledge the interrupt */
+	
+	/* Call the ISR */
+	call	w2
+
+#ifdef CONFIG_TRACING
+	call	_sys_trace_isr_exit
 #endif
 
-#if defined(CONFIG_ARMV6_M_ARMV8_M_BASELINE)
-	pop {r0, r3}
-	mov lr, r3
-#elif defined(CONFIG_ARMV7_M_ARMV8_M_MAINLINE)
-	pop {r0, lr}
-#elif defined(CONFIG_ARMV7_R)
-	/*
-	 * r0 and lr_irq were saved on the process stack since a swap could
-	 * happen.  exc_exit will handle getting those values back
-	 * from the process stack to return to the correct location
-	 * so there is no need to do anything here.
-	 */
-#else
-#error Unknown ARM architecture
-#endif /* CONFIG_ARMV6_M_ARMV8_M_BASELINE */
+	/* --(_kernel->nested) */
 
-	/* Use 'bx' instead of 'b' because 'bx' can jump further, and use
-	 * 'bx' instead of 'blx' because exception return is done in
-	 * z_arm_int_exit() */
-	ldr r1, =z_arm_int_exit
-	bx r1
+	cp0	w1
+	bra	nz, exit
+
+	/*
+	 * z_arch_get_next_switch_handle() is returning:
+	 *
+	 * - The next thread to schedule in w0
+	 * - The current thread in w1.
+	 * - This value is returned using w0
+	 */
+	push	w0
+	call	_z_arch_get_next_switch_handle
+	pop	w1
+
+	/*
+	 * w0: 1st thread in the ready queue
+	 * w1: _current thread
+	 */
+	cp	w0, w1
+	bra	z, exit
+
+	/* Switch thread */
+	call	_z_pic30_context_switch
+
+exit:
+#ifdef CONFIG_STACK_SENTINEL
+	call	_z_check_stack_sentinel
+#endif
+	z_pic30_exit_exc
+	retfie
+

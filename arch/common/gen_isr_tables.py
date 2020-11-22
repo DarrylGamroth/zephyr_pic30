@@ -72,11 +72,18 @@ def read_intlist(intlist_path, syms):
     intlist_header_fmt = prefix + "II"
     if "CONFIG_64BIT" in syms:
         intlist_entry_fmt = prefix + "iiQQ"
+    elif "CONFIG_16BIT" in syms:
+        intlist_entry_fmt = prefix + "iiHH"
     else:
         intlist_entry_fmt = prefix + "iiII"
 
     with open(intlist_path, "rb") as fp:
-        intdata = fp.read()
+        kernel = ELFFile(fp)
+        intdata = kernel.get_section_by_name('.intList').data()
+
+    # If it's a PIC30 then each byte is encoded as two bytes
+    if "CONFIG_PIC30" in syms:
+        intdata = intdata[::2]
 
     header_sz = struct.calcsize(intlist_header_fmt)
     header = struct.unpack_from(intlist_header_fmt, intdata, 0)
@@ -223,7 +230,7 @@ def main():
 
                 debug('3rd level offsets: {}'.format(list_3rd_lvl_offsets))
 
-    intlist = read_intlist(args.intlist, syms)
+    intlist = read_intlist(args.kernel, syms)
     nvec = intlist["num_vectors"]
     offset = intlist["offset"]
 

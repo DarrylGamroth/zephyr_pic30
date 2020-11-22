@@ -34,11 +34,13 @@ struct _callee_saved {
     uint16_t w12;
     uint16_t w13;
     uint16_t w14;
+    uint16_t w15;
 };
+
 typedef struct _callee_saved _callee_saved_t;
 
 struct _thread_arch {
-	uint16_t swap_return_value; /* Return value of z_swap() */
+	/* empty */
 };
 
 typedef struct _thread_arch _thread_arch_t;

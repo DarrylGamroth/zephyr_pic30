@@ -6,7 +6,6 @@
 
 #include <pic30/dspic33c.dtsi>
 #include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/i2c/i2c.h>
 
 / {
 	chosen {
@@ -31,6 +30,13 @@
 	};
 
 	soc {
+		timer1: timer@100 {
+			compatible = "microchip,pic30-timer1";
+			reg = <0x100 0x008>;
+			interrupts = <9 1>;
+			label = "TIMER_1";
+		};
+
 		flash: flash-controller@8d0 {
 			compatible = "microchip,dspic33ep-flash-controller";
 			label = "FLASH_CTRL";

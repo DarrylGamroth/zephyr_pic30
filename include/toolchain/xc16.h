@@ -36,16 +36,6 @@
 #undef SECTION_FUNC
 #undef SECTION_SUBSEC_FUNC
 
-#if 0
-#define SECTION_VAR(sect, sym)  .section .sect.##sym; sym :
-#define SECTION_FUNC(sect, sym)						\
-	.section .sect.sym,code;					\
-				PERFOPT_ALIGN; sym :		\
-							FUNC_INSTR(sym)
-#define SECTION_SUBSEC_FUNC(sect, subsec, sym)				\
-		.section .sect.subsec,code; PERFOPT_ALIGN; sym :
-#endif
-#if 1
 /*
  * Need to use assembly macros because ';' is interpreted as the start of
  * a single line comment in the ARC assembler.
@@ -76,8 +66,6 @@
 #define SECTION_FUNC(sect, sym) section_func sect, sym
 #define SECTION_SUBSEC_FUNC(sect, subsec, sym) \
 	section_subsec_func sect, subsec, sym
-
-#endif
 
 #endif /* _ASMLANGUAGE */
 

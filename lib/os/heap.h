@@ -6,6 +6,8 @@
 #ifndef ZEPHYR_INCLUDE_LIB_OS_HEAP_H_
 #define ZEPHYR_INCLUDE_LIB_OS_HEAP_H_
 
+#include <sys/math_extras.h>
+
 /*
  * Internal heap APIs
  */
@@ -226,7 +228,7 @@ static inline int min_chunk_size(struct z_heap *h)
 static inline int bucket_idx(struct z_heap *h, size_t sz)
 {
 	size_t usable_sz = sz - min_chunk_size(h) + 1;
-	return (sizeof(size_t) * CHAR_BIT - 1) - u32_count_leading_zeros(usable_sz);
+	return 31 - u32_count_leading_zeros(usable_sz);
 }
 
 /* For debugging */

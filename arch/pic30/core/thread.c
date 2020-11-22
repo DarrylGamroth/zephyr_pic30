@@ -4,46 +4,66 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @file
+ * @brief New thread creation for PIC30
+ *
+ * Core thread related primitives for the PIC30
+ */
+
 #include <kernel.h>
 #include <ksched.h>
+#include <wait_q.h>
+#include <arch/cpu.h>
 
-void z_thread_entry_wrapper(k_thread_entry_t thread,
-			    void *arg1,
-			    void *arg2,
-			    void *arg3);
-
-struct init_stack_frame {
-    uint16_t w0;
-};
-
+/*
+ * An initial context, to be "restored" by z_pic30_context_switch(), is put at
+ * the other end of the stack, and thus reusable by the stack when not needed
+ * anymore.
+ */
 void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 		     char *stack_ptr, k_thread_entry_t entry,
-		     void *arg1, void *arg2, void *arg3)
+		     void *p1, void *p2, void *p3)
 {
-	struct init_stack_frame *iframe;
+	z_arch_esf_t *pInitCtx;
 
-	struct __esf *stack_init;
+	//pInitCtx = Z_STACK_PTR_TO_FRAME(struct __esf, stack_ptr);
+	pInitCtx = Z_STACK_PTR_TO_FRAME(z_arch_esf_t, stack_ptr);
 
-	/* Initial stack frame data, stored at the base of the stack */
-	iframe = Z_STACK_PTR_TO_FRAME(struct init_stack_frame, stack_ptr);
+    /* Emulate the stack frame of an interrupt call */
 
-#ifdef CONFIG_PIC30_SOC_CONTEXT_SAVE
-	const struct soc_esf soc_esf_init = {SOC_ESF_INIT};
-#endif
-#if 0
-	/* Setup the initial stack frame */
-	iframe->w0 = (uint16_t)arg1;
-	iframe->w1 = (uint16_t)arg2;
-	iframe->w2 = (uint16_t)arg3;
-#endif
+    /* Set SR to enable all interrupts */
+    pInitCtx->srl_ipl3_pch = 0;
+    pInitCtx->pcl_sfa = (uint16_t)entry;
 
-#if 0
-#ifdef CONFIG_PIC30_SOC_CONTEXT_SAVE
-	stack_init->soc_context = soc_esf_init;
-#endif
+	pInitCtx->w0 = (uint16_t)entry;
+	pInitCtx->w1 = (uint16_t)p1;
+	pInitCtx->w2 = (uint16_t)p2;
+	pInitCtx->w3 = (uint16_t)p3;
 
-	thread->callee_saved.sp = (uint16_t)stack_init;
-#endif
-    thread->switch_handle = thread;
+    pInitCtx->tblpag = TBLPAG;
+    pInitCtx->dsrpag = DSRPAG;
+    pInitCtx->dswpag = DSWPAG;
+
+    /* Set the SPLIM register to point to the end of the stack */
+	pInitCtx->splim = 0U;
+
+    /* Set SR to enable all interrupts */
+	pInitCtx->sr = 0U;
+	pInitCtx->corcon = CORCON;
+
+	/*
+	 * We are saving SP to pop out entry and parameters when going through
+	 * z_pic30_exit_exc()
+	 */
+	thread->callee_saved.w15 = (uint16_t)pInitCtx;
+
+	thread->switch_handle = thread;
 }
 
+void *z_arch_get_next_switch_handle(struct k_thread **old_thread)
+{
+	*old_thread =  _current;
+
+	return z_get_next_switch_handle(*old_thread);
+}

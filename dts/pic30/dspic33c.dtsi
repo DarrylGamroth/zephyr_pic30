@@ -14,16 +14,16 @@
 		interrupt-parent = <&intc>;
 		ranges;
 
-		intc: interrupt-controller@2  {
-			compatible = "microchip,33e-intc";
-			reg = <0x000002 0x1fe>;
+		intc: interrupt-controller@800  {
+			compatible = "microchip,pic30-intc";
+			reg = <0x800 0xc8>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
 		};
 
-		systick: timer@104 {
-			compatible = "microchip,pic30-type-a";
-			reg = <0x000104 0x06>;
+		timer1: timer@100 {
+			compatible = "microchip,pic30-timer1";
+			reg = <0x000100 0x008>;
 			status = "disabled";
 		};
 	};

@@ -86,6 +86,7 @@ config PIC30
 	select 16BIT
 	select ARCH_IS_SET
 	select HAS_DTS
+	select ATOMIC_OPERATIONS_C
 	select USE_SWITCH
 	select USE_SWITCH_SUPPORTED
 	select STACK_GROWS_UP

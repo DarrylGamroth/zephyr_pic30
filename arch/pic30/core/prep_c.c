@@ -8,16 +8,13 @@
  * @file
  * @brief Full C support initialization
  *
- *
  * Initialization of full C support: zero the .bss and call z_cstart().
  *
  * Stack is available in this module, but not the global data/bss until their
  * initialization is performed.
  */
 
-#include <kernel.h>
 #include <kernel_internal.h>
-#include <linker/linker-defs.h>
 
 extern FUNC_NORETURN void z_cstart(void);
 /**
@@ -28,10 +25,11 @@ extern FUNC_NORETURN void z_cstart(void);
  *
  * @return N/A
  */
-FUNC_NORETURN void z_pic30_prep_c(void)
+void z_pic30_prep_c(void)
 {
 	z_bss_zero();
-//    z_pic30_interrupt_init();
+	z_pic30_interrupt_init();
 	z_cstart();
+
 	CODE_UNREACHABLE;
 }

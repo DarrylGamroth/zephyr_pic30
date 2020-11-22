@@ -18,6 +18,11 @@
 #include <linker/linker-defs.h>
 #include <linker/linker-tool.h>
 
+OUTPUT_ARCH("33CK256MP508")
+CRT0_STARTUP(reset.o)
+CRT1_STARTUP(reset.o)
+CRT_STARTMODE(crt_start_mode_normal)
+
 /* physical address of RAM */
 #define ROMABLE_REGION program
 #define RAMABLE_REGION data
@@ -45,7 +50,7 @@ MEMORY
     ROMABLE_REGION	(rx)   : ORIGIN = ROM_ADDR, LENGTH = ROM_SIZE
     RAMABLE_REGION	(a!xr) : ORIGIN = RAM_ADDR, LENGTH = RAM_SIZE
     /* Used by and documented in include/linker/intlist.ld */
-    IDT_LIST  (wx)      : ORIGIN = (RAM_ADDR + RAM_SIZE), LENGTH = 2K
+    IDT_LIST  (wx)      : ORIGIN = 0xfff7ff, LENGTH = 2K
     }
 
 ENTRY(CONFIG_KERNEL_ENTRY)
@@ -55,7 +60,7 @@ SECTIONS
 
     GROUP_START(ROMABLE_REGION)
 
-	_image_rom_start = ROM_ADDR;
+	SYMBOL(_image_rom_start) = ROM_ADDR;
 
     SECTION_PROLOGUE(rom_start,,)
 	{
@@ -70,7 +75,7 @@ SECTIONS
 
     SECTION_PROLOGUE(_TEXT_SECTION_NAME,,)
 	{
-	_image_text_start = .;
+	SYMBOL(_image_text_start) = .;
 
 #include <linker/kobject-text.ld>
   /*
@@ -78,18 +83,18 @@ SECTIONS
   ** The best-fit allocator locates them, so that .text
   ** may flow around PSV sections as needed.
   */
-/*
+	*(.init)
 	*(.text)
 	*(".text.*")
-*/
-	*(.handle);
+	KEEP(*(.handle))
+	*(.libm) *(.libdsp)  /* keep together in this order */
 	*(.gnu.linkonce.t.*)
 
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
-	_image_text_end = .;
+	SYMBOL(_image_text_end) = .;
 
-	_image_rodata_start = .;
+	SYMBOL(_image_rodata_start) = .;
 
 #include <linker/common-rom.ld>
 
@@ -121,9 +126,9 @@ SECTIONS
 
 #include <linker/cplusplus-rom.ld>
 
-	_image_rodata_end = .;
+	SYMBOL(_image_rodata_end) = .;
 	MPU_ALIGN(_image_rodata_end -_image_rom_start);
-	_image_rom_end = .;
+	SYMBOL(_image_rom_end) = .;
 
     GROUP_END(ROMABLE_REGION)
 
@@ -134,7 +139,7 @@ SECTIONS
 	 * minimum granularity required by MPU.
 	 */
 	. = ALIGN(_region_min_align);
-	_image_ram_start = .;
+	SYMBOL(_image_ram_start) = .;
 
 /* Located in generated directory. This file is populated by the
  * zephyr_linker_sources() Cmake function.
@@ -143,7 +148,7 @@ SECTIONS
 
     SECTION_DATA_PROLOGUE(_DATA_SECTION_NAME,,)
 	{
-	__data_ram_start = .;
+	SYMBOL(__data_ram_start) = .;
 	*(.data)
 	*(".data.*")
 	*(".kernel.*")
@@ -155,28 +160,27 @@ SECTIONS
 
 	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
-    __data_rom_start = LOADADDR(_DATA_SECTION_NAME);
+    SYMBOL(__data_rom_start) = LOADADDR(_DATA_SECTION_NAME);
 
 #include <linker/common-ram.ld>
 #include <linker/kobject.ld>
 
 #include <linker/cplusplus-ram.ld>
 
-    __data_ram_end = .;
+    SYMBOL(__data_ram_end) = .;
 
    SECTION_DATA_PROLOGUE(_BSS_SECTION_NAME,(NOLOAD),)
 	{
         . = ALIGN(2);
-	__bss_start = .;
-	___bss_start = .;
-	__kernel_ram_start = .;
+	SYMBOL(__bss_start) = .;
+	SYMBOL(__kernel_ram_start) = .;
 
 	*(.bss)
 	*(".bss.*")
 	*(COMMON)
 	*(".kernel_bss.*")
 
-	__bss_end = ALIGN(2);
+	SYMBOL(__bss_end) = ALIGN(2);
 	} GROUP_DATA_LINK_IN(RAMABLE_REGION, RAMABLE_REGION)
 
     SECTION_PROLOGUE(_NOINIT_SECTION_NAME,(NOLOAD),)
@@ -198,11 +202,11 @@ SECTIONS
 
     /* Define linker symbols */
 
-    _image_ram_end = .;
-    _end = .; /* end of image */
+    SYMBOL(_image_ram_end) = .;
+    SYMBOL(_end) = .; /* end of image */
 
-    __kernel_ram_end = RAM_ADDR + RAM_SIZE;
-    __kernel_ram_size = __kernel_ram_end - __kernel_ram_start;
+    SYMBOL(__kernel_ram_end) = RAM_ADDR + RAM_SIZE;
+    SYMBOL(__kernel_ram_size) = SYMBOL(__kernel_ram_end) - SYMBOL(__kernel_ram_start);
 
     GROUP_END(RAMABLE_REGION)
 
@@ -223,7 +227,7 @@ SECTION_PROLOGUE(.last_section,(NOLOAD),)
 
 /* To provide the image size as a const expression,
  * calculate this value here. */
-_flash_used = LOADADDR(.last_section) - _image_rom_start;
+SYMBOL(_flash_used) = LOADADDR(.last_section) - SYMBOL(_image_rom_start);
 
     }
 

@@ -6,15 +6,19 @@
 if SOC_SERIES_DSPIC33C
 
 config SOC_SERIES
+	string
 	default "dspic33c"
 
 config SOC_PART_NUMBER
-	default "33ck256mc508" if SOC_PART_NUMBER_DSPIC33CK256MC508
+	string
+	default "33ck256mp508" if SOC_PART_NUMBER_DSPIC33CK256MP508
 
 config NUM_IRQS
-	default 254
+	int
+	default 195 if SOC_PART_NUMBER_DSPIC33CK256MP508
 
 config SYS_CLOCK_HW_CYCLES_PER_SEC
+	int
 	default 200000000
 
 endif # SOC_SERIES_DSPIC33C

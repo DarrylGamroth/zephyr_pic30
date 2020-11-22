@@ -1,6 +1,6 @@
-description: Microchip dsPIC33E interrupt controller
+description: Microchip PIC30 interrupt controller
 
-compatible: "microchip,33e-intc"
+compatible: "microchip,pic30-intc"
 
 include: [interrupt-controller.yaml, base.yaml]
 

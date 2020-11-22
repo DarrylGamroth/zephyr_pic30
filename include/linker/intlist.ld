@@ -40,7 +40,7 @@ SECTION_PROLOGUE(.intList,,)
 #else
 /DISCARD/ :
 {
-	KEEP(*(.irq_info*))
-	KEEP(*(.intList*))
+	*(.irq_info*)
+	*(.intList*)
 }
 #endif

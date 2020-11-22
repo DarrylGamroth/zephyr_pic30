@@ -307,6 +307,23 @@ config CAVS_TIMER
 	  a common and synchronized counter for all CPU cores (which
 	  is useful for SMP).
 
+menuconfig PIC30_TIMER
+	bool "PIC30 Timer"
+	default y
+	depends on PIC30
+	select TICKLESS_CAPABLE
+	help
+	  This module implements a kernel device driver for the PIC30 processor timer 1
+	  and provides the standard "system clock driver" interfaces.
+
+config PIC30_TIMER_IRQ_PRIORITY
+	int "PIC30 timer interrupt priority"
+	default 1
+	depends on PIC30_TIMER
+	help
+	  This option specifies the IRQ priority used by the PIC30 timer. Higher
+	  values have higher priority.
+
 config SYSTEM_CLOCK_DISABLE
 	bool "API to disable system clock"
 	help

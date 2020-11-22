@@ -6,10 +6,15 @@
 
 /**
  * @file
- * @brief Private kernel definitions
+ * @brief Private kernel definitions (PIC30)
  *
- * This file contains private kernel function/macro definitions and various
- * other definitions for the PIC30 processor architecture.
+ * This file contains private kernel function definitions and various
+ * other definitions for the Microchip PIC30 processor architecture family.
+ *
+ * This file is also included by assembly language files which must #define
+ * _ASMLANGUAGE before including this header file.  Note that kernel
+ * assembly source files obtains structure offset values via "absolute symbols"
+ * in the offsets.o module.
  */
 
 #ifndef ZEPHYR_ARCH_PIC30_INCLUDE_KERNEL_ARCH_FUNC_H_
@@ -23,34 +28,18 @@ extern "C" {
 
 #ifndef _ASMLANGUAGE
 
-/**
- * @brief Perform architecture-specific initialization
- *
- * This routine performs architecture-specific initialization of the
- * kernel.  Trivial stuff is done inline; more complex initialization
- * is done via function calls.
- *
- * @return N/A
- */
 static ALWAYS_INLINE void arch_kernel_init(void)
 {
-
 }
 
-/* PIC30 currently supports USE_SWITCH and USE_SWITCH only */
-void arch_switch(void *switch_to, void **switched_from);
+extern void z_pic30_arch_switch(void *switch_to, void **switched_from);
 
-FUNC_NORETURN void z_pic30_fatal_error(unsigned int reason,
-				       const z_arch_esf_t *esf);
-
-static inline bool arch_is_in_isr(void)
+static inline void arch_switch(void *switch_to, void **switched_from)
 {
-	return _kernel.cpus[0].nested != 0U;
+	z_pic30_arch_switch(switch_to, switched_from);
 }
 
-#ifdef CONFIG_IRQ_OFFLOAD
-int z_irq_do_offload(void);
-#endif
+extern void z_pic30_fatal_error(const z_arch_esf_t *esf, unsigned int reason);
 
 #endif /* _ASMLANGUAGE */
 

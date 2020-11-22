@@ -14,8 +14,6 @@
 /* Add include for DTS generated information */
 #include <devicetree.h>
 
-//#include <xc.h>
-
 #endif /* _ASMLANGUAGE */
 
 #endif /* _MICROCHIP_DSPIC33C_SOC_H_ */

@@ -34,14 +34,18 @@ endif()
 
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/include/lega-c")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/h")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/inc")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33C/h")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33C/inc")
 
-list(APPEND TOOLCHAIN_C_FLAGS -mcpu=33CK256MP508 -save-temps -Wl,-no-leading-underscore)
-list(APPEND TOOLCHAIN_LD_FLAGS NO_SPLIT -mcpu=33CK256MP508 --handles)
-#	-mcpu=33CK256MP508
-#	--handles
-#	--no-isr
-#	--no-ivt
-#	--no-smart-io)
+list(APPEND TOOLCHAIN_C_FLAGS -mcpu=${CONFIG_SOC_PART_NUMBER} -save-temps)
+list(APPEND TOOLCHAIN_LD_FLAGS
+	-Wl,--handles
+	-Wl,--no-isr
+	-Wl,--no-ivt
+	-Wl,--no-smart-io
+	-lm)
+set(LIBC_LIBRARY_DIR "\"${TOOLCHAIN_HOME}\"/lib")
 
 # For CMake to be able to test if a compiler flag is supported by the
 # toolchain we need to give CMake the necessary flags to compile and
@@ -61,12 +65,10 @@ endforeach()
 #
 # Appending onto any existing values lets users specify
 # toolchain-specific flags at generation time.
-list(APPEND CMAKE_REQUIRED_FLAGS
+list(APPEND CMAKE_REQUIRED_FLAGS 
   -nostartfiles
   -nostdlib
-  ${isystem_include_flags}
-  -Wl,--unresolved-symbols=ignore-in-object-files
-  -Wl,--entry=0 # Set an entry point to avoid a warning
+  -L${TOOLCHAIN_HOME}/lib
+  -llega-pic30 # Include library to provide __reset
   )
 string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
-
