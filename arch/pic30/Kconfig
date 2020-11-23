@@ -97,4 +97,8 @@ config GEN_IRQ_START_VECTOR
 config NUM_IRQS
 	int
 
+config NUM_IRQ_PRIO_LEVELS
+	int
+	default 8
+
 endmenu

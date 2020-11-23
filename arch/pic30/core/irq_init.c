@@ -10,6 +10,7 @@
  */
 
 #include <arch/cpu.h>
+#include <drivers/interrupt_controller/pic30-intc.h>
 
 /**
  *
@@ -27,9 +28,6 @@ void z_pic30_interrupt_init(void)
 	int irq = 0;
 
 	for (; irq < CONFIG_NUM_IRQS; irq++) {
-#ifdef FIXME
-#warning "Initialize interrupt default priorities"
-		NVIC_SetPriority((IRQn_Type)irq, _IRQ_PRIO_OFFSET);
-#endif
+        pic30_intc_irq_set_priority(irq, _EXC_IRQ_DEFAULT_PRIO); 
 	}
 }

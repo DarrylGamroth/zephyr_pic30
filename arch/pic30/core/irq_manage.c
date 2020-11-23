@@ -16,53 +16,44 @@
 #include <toolchain.h>
 #include <linker/sections.h>
 #include <sw_isr_table.h>
+#include <drivers/interrupt_controller/pic30-intc.h>
 
 void z_pic30_fatal_error(unsigned int reason, const z_arch_esf_t *esf);
 
 void arch_irq_enable(unsigned int irq)
 {
-    /* FIXME IEC0 */
-    uint16_t reg = (uint16_t)0x820U + irq / 16;
-    uint16_t val = 1U << (irq % 16);
-
-
-    sys_write16(sys_read16(reg) | val, reg);
+    pic30_intc_irq_enable(irq);
 }
 
 void arch_irq_disable(unsigned int irq)
 {
-    /* FIXME IEC0 */
-    uint16_t reg = (uint16_t)0x820U + irq / 16;
-    uint16_t val = 1U << (irq % 16);
-
-
-    sys_write16(sys_read16(reg) & ~val, reg);
+    pic30_intc_irq_disable(irq);
 }
 
 int arch_irq_is_enabled(unsigned int irq)
 {
-    /* FIXME IEC0 */
-    uint16_t reg = (uint16_t)0x820U + irq / 16;
-    uint16_t val = 1U << (irq % 16);
-
-
-    return !!(sys_read16(reg) & val);
+    return pic30_intc_irq_is_enabled(irq);
 }
 
 void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio, uint32_t flags)
 {
-    ARG_UNUSED(flags);
+#if defined(CONFIG_ZERO_LATENCY_IRQS)
+	/* If we have zero latency interrupts, those interrupts will
+	 * run at a priority level which is not masked by irq_lock().
+	 * Our policy is to express priority levels with special properties
+	 * via flags
+	 */
+	if (flags & IRQ_ZERO_LATENCY) {
+		prio = _EXC_ZERO_LATENCY_IRQS_PRIO;
+    }
+#else
+	ARG_UNUSED(flags);
+#endif
 
 	__ASSERT(prio < CONFIG_NUM_IRQ_PRIO_LEVELS,
 		 "invalid priority %d for irq %d", prio, irq);
 
-    /* FIXME IPC0 */
-    uint16_t reg = (uint16_t)0x840U + irq / 4;
-    uint16_t offset = ((irq % 4) * 4);
-    uint16_t mask = 0x7 << offset;
-    uint16_t val = (prio & 0x7) << offset;
-
-    sys_write16((sys_read16(reg) & ~mask) | val, reg);
+    pic30_intc_irq_set_priority(irq, prio);
 }
 
 #ifdef CONFIG_DYNAMIC_INTERRUPTS

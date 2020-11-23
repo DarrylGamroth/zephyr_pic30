@@ -14,7 +14,12 @@
 #ifndef ZEPHYR_INCLUDE_ARCH_PIC30_EXC_H_
 #define ZEPHYR_INCLUDE_ARCH_PIC30_EXC_H_
 
-/* for assembler, only works with constants */
+#ifdef CONFIG_ZERO_LATENCY_IRQS
+#define _EXC_ZERO_LATENCY_IRQS_PRIO 7U
+#endif
+
+/* Deafult priority disables interrupts */
+#define _EXC_IRQ_DEFAULT_PRIO       0U
 
 #ifndef _ASMLANGUAGE
 #include <zephyr/types.h>

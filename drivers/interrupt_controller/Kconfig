@@ -57,4 +57,5 @@ source "drivers/interrupt_controller/Kconfig.gic"
 
 source "drivers/interrupt_controller/Kconfig.npcx"
 
+source "drivers/interrupt_controller/Kconfig.pic30"
 endmenu

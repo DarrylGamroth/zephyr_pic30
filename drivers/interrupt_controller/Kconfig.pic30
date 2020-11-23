@@ -1,0 +1,15 @@
+# PIC30 INTC configuration
+
+# Copyright (c) 2020 Rubus Technologies Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if PIC30
+
+config PIC30_INTC
+	bool "Interrupt Controller for PIC30 family of processors"
+	default y if PIC30
+	help
+	  The Microchip PIC30 Interrupt Controller works with the
+	  dsPIC33/PIC24 enhanced core processors.
+
+endif # SOC_FAMILY_PIC30
