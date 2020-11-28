@@ -1475,7 +1475,8 @@ const char *k_thread_state_str(k_tid_t thread_id);
  * @param t Tick uptime value
  * @return Timeout delay value
  */
-#define K_TIMEOUT_ABS_TICKS(t) Z_TIMEOUT_TICKS(Z_TICK_ABS(MAX(t, 0)))
+#define K_TIMEOUT_ABS_TICKS(t) \
+	Z_TIMEOUT_TICKS(Z_TICK_ABS((k_ticks_t)MAX(t, 0)))
 
 /**
  * @brief Generates an absolute/uptime timeout value from milliseconds
@@ -3003,6 +3004,31 @@ extern void k_work_q_user_start(struct k_work_q *work_q,
 				k_thread_stack_t *stack,
 				size_t stack_size, int prio);
 
+#define Z_DELAYED_WORK_INITIALIZER(work_handler) \
+	{ \
+		.work = Z_WORK_INITIALIZER(work_handler), \
+		.timeout = { \
+			.node = {},\
+			.fn = NULL, \
+			.dticks = 0, \
+		}, \
+		.work_q = NULL, \
+	}
+
+/**
+ * @brief Initialize a statically-defined delayed work item.
+ *
+ * This macro can be used to initialize a statically-defined workqueue
+ * delayed work item, prior to its first use. For example,
+ *
+ * @code static K_DELAYED_WORK_DEFINE(<work>, <work_handler>); @endcode
+ *
+ * @param work Symbol name for delayed work item object
+ * @param work_handler Function to invoke each time work item is processed.
+ */
+#define K_DELAYED_WORK_DEFINE(work, work_handler) \
+	struct k_delayed_work work = Z_DELAYED_WORK_INITIALIZER(work_handler)
+
 /**
  * @brief Initialize a delayed work item.
  *
@@ -3014,8 +3040,11 @@ extern void k_work_q_user_start(struct k_work_q *work_q,
  *
  * @return N/A
  */
-extern void k_delayed_work_init(struct k_delayed_work *work,
-				k_work_handler_t handler);
+static inline void k_delayed_work_init(struct k_delayed_work *work,
+				       k_work_handler_t handler)
+{
+	*work = (struct k_delayed_work)Z_DELAYED_WORK_INITIALIZER(handler);
+}
 
 /**
  * @brief Submit a delayed work item.
@@ -4260,6 +4289,9 @@ struct k_mem_slab {
 	char *buffer;
 	char *free_list;
 	uint32_t num_used;
+#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	uint32_t max_used;
+#endif
 
 	_OBJECT_TRACING_NEXT_PTR(k_mem_slab)
 	_OBJECT_TRACING_LINKED_FLAG
@@ -4386,6 +4418,26 @@ extern void k_mem_slab_free(struct k_mem_slab *slab, void **mem);
 static inline uint32_t k_mem_slab_num_used_get(struct k_mem_slab *slab)
 {
 	return slab->num_used;
+}
+
+/**
+ * @brief Get the number of maximum used blocks so far in a memory slab.
+ *
+ * This routine gets the maximum number of memory blocks that were
+ * allocated in @a slab.
+ *
+ * @param slab Address of the memory slab.
+ *
+ * @return Maximum number of allocated memory blocks.
+ */
+static inline uint32_t k_mem_slab_max_used_get(struct k_mem_slab *slab)
+{
+#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	return slab->max_used;
+#else
+	ARG_UNUSED(slab);
+	return 0;
+#endif
 }
 
 /**

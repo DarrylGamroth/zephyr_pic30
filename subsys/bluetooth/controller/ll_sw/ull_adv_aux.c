@@ -421,9 +421,9 @@ uint8_t ull_adv_aux_hdr_set_clear(struct ll_adv_set *adv,
 	struct pdu_adv_com_ext_adv *sec_com_hdr, *sec_com_hdr_prev;
 	struct pdu_adv_hdr *pri_hdr, pri_hdr_prev;
 	struct pdu_adv_hdr *sec_hdr, sec_hdr_prev;
+	uint16_t pri_len, sec_len, sec_len_prev;
 	struct pdu_adv *pri_pdu, *pri_pdu_prev;
 	struct pdu_adv *sec_pdu_prev, *sec_pdu;
-	uint8_t pri_len, sec_len, sec_len_prev;
 	uint8_t *pri_dptr, *pri_dptr_prev;
 	uint8_t *sec_dptr, *sec_dptr_prev;
 	struct lll_adv_aux *lll_aux;
@@ -628,14 +628,15 @@ uint8_t ull_adv_aux_hdr_set_clear(struct ll_adv_set *adv,
 	/* TODO: ACAD in secondary channel PDU */
 
 	/* Calc primary PDU len */
-	pri_len = ull_adv_aux_hdr_len_get(pri_com_hdr, pri_dptr);
+	pri_len = ull_adv_aux_hdr_len_calc(pri_com_hdr, &pri_dptr);
 	ull_adv_aux_hdr_len_fill(pri_com_hdr, pri_len);
 
 	/* set the primary PDU len */
 	pri_pdu->len = pri_len;
 
 	/* Calc previous secondary PDU len */
-	sec_len_prev = ull_adv_aux_hdr_len_get(sec_com_hdr_prev, sec_dptr_prev);
+	sec_len_prev = ull_adv_aux_hdr_len_calc(sec_com_hdr_prev,
+					       &sec_dptr_prev);
 
 	/* Did we parse beyond PDU length? */
 	if (sec_len_prev > sec_pdu_prev->len) {
@@ -645,7 +646,7 @@ uint8_t ull_adv_aux_hdr_set_clear(struct ll_adv_set *adv,
 	}
 
 	/* Calc current secondary PDU len */
-	sec_len = ull_adv_aux_hdr_len_get(sec_com_hdr, sec_dptr);
+	sec_len = ull_adv_aux_hdr_len_calc(sec_com_hdr, &sec_dptr);
 	ull_adv_aux_hdr_len_fill(sec_com_hdr, sec_len);
 
 	/* AD Data, add or remove */
@@ -662,14 +663,17 @@ uint8_t ull_adv_aux_hdr_set_clear(struct ll_adv_set *adv,
 		ad_data = sec_dptr_prev;
 	}
 
-	/* set the secondary PDU len */
-	sec_pdu->len = sec_len + ad_len;
+	/* Add AD len to secondary PDU length */
+	sec_len += ad_len;
 
 	/* Check AdvData overflow */
-	if (sec_pdu->len > PDU_AC_PAYLOAD_SIZE_MAX) {
+	if (sec_len > PDU_AC_PAYLOAD_SIZE_MAX) {
 		/* FIXME: release allocations */
 		return BT_HCI_ERR_PACKET_TOO_LONG;
 	}
+
+	/* set the secondary PDU len */
+	sec_pdu->len = sec_len;
 
 	/* Start filling pri and sec PDU payload based on flags from here
 	 * ==============================================================
@@ -862,33 +866,17 @@ uint32_t ull_adv_aux_start(struct ll_adv_aux_set *aux, uint32_t ticks_anchor,
 
 uint8_t ull_adv_aux_stop(struct ll_adv_aux_set *aux)
 {
-	uint32_t volatile ret_cb;
 	uint8_t aux_handle;
-	void *mark;
-	uint32_t ret;
-
-	mark = ull_disable_mark(aux);
-	LL_ASSERT(mark == aux);
+	int err;
 
 	aux_handle = aux_handle_get(aux);
 
-	ret_cb = TICKER_STATUS_BUSY;
-	ret = ticker_stop(TICKER_INSTANCE_ID_CTLR, TICKER_USER_ID_THREAD,
-			  TICKER_ID_ADV_AUX_BASE + aux_handle,
-			  ull_ticker_status_give, (void *)&ret_cb);
-	ret = ull_ticker_status_take(ret, &ret_cb);
-	if (ret) {
-		mark = ull_disable_mark(aux);
-		LL_ASSERT(mark == aux);
-
+	err = ull_ticker_stop_with_mark(TICKER_ID_ADV_AUX_BASE + aux_handle,
+					aux, &aux->lll);
+	LL_ASSERT(err == 0 || err == -EALREADY);
+	if (err) {
 		return BT_HCI_ERR_CMD_DISALLOWED;
 	}
-
-	ret = ull_disable(&aux->lll);
-	LL_ASSERT(!ret);
-
-	mark = ull_disable_unmark(aux);
-	LL_ASSERT(mark == aux);
 
 	aux->is_started = 0U;
 

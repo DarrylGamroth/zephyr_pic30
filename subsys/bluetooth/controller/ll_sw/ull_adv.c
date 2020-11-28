@@ -418,7 +418,7 @@ uint8_t ll_adv_params_set(uint16_t interval, uint8_t adv_type,
 		}
 
 		/* Calc primary PDU len */
-		len = ull_adv_aux_hdr_len_get(pri_com_hdr, pri_dptr);
+		len = ull_adv_aux_hdr_len_calc(pri_com_hdr, &pri_dptr);
 		ull_adv_aux_hdr_len_fill(pri_com_hdr, len);
 
 		/* Set PDU length */
@@ -436,7 +436,7 @@ uint8_t ll_adv_params_set(uint16_t interval, uint8_t adv_type,
 
 			_tx_pwr = 0;
 			if (tx_pwr) {
-				if (*tx_pwr != 0x7F) {
+				if (*tx_pwr != BT_HCI_LE_ADV_TX_POWER_NO_PREF) {
 					_tx_pwr = *tx_pwr;
 				} else {
 					*tx_pwr = _tx_pwr;
@@ -806,9 +806,9 @@ uint8_t ll_adv_enable(uint8_t enable)
 #endif /* CONFIG_BT_CTLR_PHY */
 
 #if defined(CONFIG_BT_CTLR_CONN_RSSI)
-		conn_lll->rssi_latest = 0x7F;
+		conn_lll->rssi_latest = BT_HCI_LE_RSSI_NOT_AVAILABLE;
 #if defined(CONFIG_BT_CTLR_CONN_RSSI_EVENT)
-		conn_lll->rssi_reported = 0x7F;
+		conn_lll->rssi_reported = BT_HCI_LE_RSSI_NOT_AVAILABLE;
 		conn_lll->rssi_sample_count = 0;
 #endif /* CONFIG_BT_CTLR_CONN_RSSI_EVENT */
 #endif /* CONFIG_BT_CTLR_CONN_RSSI */
@@ -1298,12 +1298,12 @@ int ull_adv_init(void)
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CTLR_ADV_PERIODIC)) {
-		err = ull_adv_sync_init();
-		if (err) {
-			return err;
-		}
+#if defined(CONFIG_BT_CTLR_ADV_PERIODIC)
+	err = ull_adv_sync_init();
+	if (err) {
+		return err;
 	}
+#endif /* CONFIG_BT_CTLR_ADV_PERIODIC */
 #endif /* CONFIG_BT_CTLR_ADV_AUX_SET */
 #endif /* CONFIG_BT_CTLR_ADV_EXT */
 
@@ -1334,7 +1334,8 @@ int ull_adv_reset(void)
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_BT_CTLR_ADV_PERIODIC)) {
+#if defined(CONFIG_BT_CTLR_ADV_PERIODIC)
+	{
 		int err;
 
 		err = ull_adv_sync_reset();
@@ -1342,6 +1343,7 @@ int ull_adv_reset(void)
 			return err;
 		}
 	}
+#endif /* CONFIG_BT_CTLR_ADV_PERIODIC */
 #endif /* CONFIG_BT_CTLR_ADV_AUX_SET */
 #endif /* CONFIG_BT_CTLR_ADV_EXT */
 

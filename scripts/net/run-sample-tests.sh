@@ -9,8 +9,12 @@ zephyr_pid=0
 docker_pid=0
 configuration=""
 result=0
-sample=""
+dirs=""
 zephyr_overlay=""
+docker_test_script_name=docker-test.sh
+scan_dirs=0
+
+RUNNING_FROM_MAIN_SCRIPT=1
 
 check_dirs ()
 {
@@ -63,6 +67,15 @@ check_dirs ()
     return 0
 }
 
+scan_dirs ()
+{
+    echo
+    echo "Following directories under $ZEPHYR_BASE can be used by this script:"
+    find "$ZEPHYR_BASE" -type f -name $docker_test_script_name | \
+        awk -F "$ZEPHYR_BASE/" '{ print $2 }' | \
+        sed "s/\/$docker_test_script_name//"
+}
+
 start_configuration ()
 {
     local bridge_interface=""
@@ -100,6 +113,7 @@ start_configuration ()
 	    if [ -n "$*" ]; then
 	        echo -n " with extra arguments '$*'"
 	    fi
+
 	    echo "..."
     else
 	    echo "Could not start Docker container '$image'"
@@ -143,10 +157,13 @@ start_zephyr ()
     fi
 
     rm -rf build && mkdir build && \
-	cmake -GNinja -DBOARD=native_posix -B build "$@" && \
+	cmake -GNinja -DBOARD=native_posix -B build "$@" . && \
 	ninja -C build
 
-    ninja -C build run &
+    # Run the binary directly so that ninja does not print errors that
+    # could be confusing.
+    #ninja -C build run &
+    build/zephyr/zephyr.exe &
     zephyr_pid=$!
 
     sleep 3
@@ -172,7 +189,7 @@ stop_zephyr ()
 	    local zephyrs="$zephyr_pid $(list_children "$zephyr_pid")"
 
 	    echo "Stopping Zephyr PIDs $zephyrs"
-	    kill $zephyrs
+	    kill $zephyrs 2> /dev/null
     fi
 
     zephyr_pid=0
@@ -218,7 +235,7 @@ stop_docker ()
 	    local dockers="$docker_pid $(list_children "$docker_pid")"
 
 	    echo "Stopping Docker PIDs $dockers"
-	    kill $dockers
+	    kill $dockers 2> /dev/null
     fi
 
     docker_pid=0
@@ -238,8 +255,9 @@ wait_docker ()
     return $result
 }
 
-docker_exec ()
+run_test ()
 {
+    local test="$(basename $(pwd))"
     local result=0
     local overlay=""
 
@@ -247,113 +265,8 @@ docker_exec ()
         overlay="-DOVERLAY_CONFIG=$zephyr_overlay"
     fi
 
-    case "$1" in
-	echo_server)
-	    start_configuration || return $?
-	    start_zephyr "$overlay" || return $?
-
-	    start_docker \
-		    "/net-tools/echo-client -i eth0 192.0.2.1" \
-		    "/net-tools/echo-client -i eth0 2001:db8::1" \
-		    "/net-tools/echo-client -i eth0 192.0.2.1 -t" \
-		    "/net-tools/echo-client -i eth0 2001:db8::1 -t"
-
-	    wait_docker
-	    result=$?
-
-	    stop_zephyr
-	    ;;
-
-	echo_client)
-	    start_configuration "--ip=192.0.2.1 --ip6=2001:db8::1" || return $?
-	    start_docker "/net-tools/echo-server -i eth0" || return $?
-
-	    start_zephyr "$overlay" "-DCONFIG_NET_SAMPLE_SEND_ITERATIONS=10"
-
-	    wait_zephyr
-	    result=$?
-
-	    stop_docker
-	    ;;
-
-	coap_server)
-	    start_configuration || return $?
-	    start_zephyr
-	    start_docker "/net-tools/libcoap/examples/etsi_coaptest.sh \
-                     -i eth0 192.0.2.1" || return $?
-	    wait $docker_pid
-	    result=$?
-
-	    stop_zephyr
-	    ;;
-
-	mqtt_publisher)
-	    start_configuration || return $?
-	    start_docker "/usr/local/sbin/mosquitto -v
-	                  -c /usr/local/etc/mosquitto/mosquitto.conf" || \
-			          return $?
-
-	    start_zephyr -DOVERLAY_CONFIG=overlay-sample.conf "$overlay"
-
-	    wait_zephyr
-	    result=$?
-
-	    if [ $result -ne 0 ]; then
-		    break
-	    fi
-
-	    # test TLS
-	    start_docker "/usr/local/sbin/mosquitto -v
-		              -c /usr/local/etc/mosquitto/mosquitto-tls.conf" || \
-		              return $?
-
-	    start_zephyr -DOVERLAY_CONFIG="overlay-tls.conf overlay-sample.conf" \
-		             "$overlay"
-
-	    wait_zephyr
-	    result=$?
-
-	    if [ $result -ne 0 ]; then
-		    break
-	    fi
-
-	    # TLS and SOCKS5, mosquitto TLS is already running
-	    start_docker "/usr/sbin/danted" || return $?
-
-	    start_zephyr \
-            -DOVERLAY_CONFIG="overlay-tls.conf overlay-sample.conf " \
-                             "overlay-socks5.conf" \
-		                     "$overlay" || return $?
-
-	    wait_zephyr
-	    result=$?
-
-	    stop_docker
-
-	    return $result
-	    ;;
-
-	*)
-	    echo "No sample test corresponding to directory '$1' found" >&2
-	    return 1
-	    ;;
-    esac
-
-    return $result
-}
-
-run_test ()
-{
-    local test="$(basename $(pwd))"
-    local result=0
-
-    if [ -n "$1" ]; then
-	    source "$1"
-	    result=$?
-    else
-	    docker_exec "$test"
-	    result=$?
-    fi
+	source "$1"
+	result=$?
 
     if [ $result -eq 0 ]; then
 	    echo "Sample '$test' successful"
@@ -370,7 +283,7 @@ usage ()
 
     cat <<EOF
 
-$BASENAME [-Z <zephyr base directory>] [-N <net-tools base directory>] [<test script>]
+$BASENAME [-Z <zephyr base directory>] [-N <net-tools base directory>] [<list of test directories>]
 
 This script runs Zephyr sample tests using Docker container and
 network implemented by the 'net-tools' subproject.
@@ -387,8 +300,10 @@ network implemented by the 'net-tools' subproject.
 	keep Docker container and network after test
 --overlay <config files>
 	additional configuration/overlay files for the Zephyr build process
-<test script>
-	sample script to run instead of test based on current directory
+--scan
+    find out the directories that can be used for this testing
+<list of test directories>
+	run the tests in these directories instead of current directory
 
 The automatically detected directories are:
 EOF
@@ -451,17 +366,16 @@ do
 	    fi
 	    ;;
 
+    --scan)
+        scan_dirs=1
+        ;;
 	-*)
 	    echo "Argument '$1' not recognised" >&2
 	    usage
 	    return 0
 	    ;;
 	*)
-	    if [ -n "$sample" ]; then
-		    echo "Sample already specified" >&2
-		    return 1
-	    fi
-	    sample="$1"
+	    dirs="$dirs $1"
 	    ;;
     esac
 
@@ -470,14 +384,51 @@ done
 
 check_dirs || exit $?
 
+if [ $scan_dirs -eq 1 ]; then
+    scan_dirs
+    exit 0
+fi
+
 if [ -z "$configuration" -o "$configuration" = "start_only" -o \
 	"$configuration" = "keep" ]; then
     if [ "$configuration" = start_only ]; then
 	    start_configuration
 	    result=$?
     else
-	    run_test "$sample"
-	    result=$?
+        result=0
+        found=0
+
+        if [ -z "$dirs" ]; then
+            dirs="."
+        fi
+
+        for d in $dirs; do
+            if [ ! -d "$d" ]; then
+                echo "No such directory $d, skipping it"
+                continue
+            fi
+
+            if [ ! -f "$d/$docker_test_script_name" ]; then
+                echo "No such file $d/$docker_test_script_name, skipping directory"
+                continue
+            fi
+
+            found=$(expr $found + 1)
+
+            CURR_DIR=`pwd`
+            cd "$d"
+	        run_test "./$docker_test_script_name"
+	        test_result=$?
+            cd "$CURR_DIR"
+
+            if [ $test_result -ne 0 ]; then
+                result=1
+            fi
+        done
+
+        if [ $found -eq 0 ]; then
+            exit 1
+        fi
     fi
 fi
 

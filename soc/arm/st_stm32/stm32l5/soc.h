@@ -43,9 +43,8 @@
 #include <stm32l5xx_ll_gpio.h>
 #endif
 
-#ifdef CONFIG_SERIAL_HAS_DRIVER
-#include <stm32l5xx_ll_usart.h>
-#include <stm32l5xx_ll_lpuart.h>
+#ifdef CONFIG_I2C_STM32
+#include <stm32l5xx_ll_i2c.h>
 #endif
 
 #endif /* !_ASMLANGUAGE */

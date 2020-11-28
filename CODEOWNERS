@@ -65,6 +65,8 @@
 /soc/x86/                                 @andrewboie @jenmwms @aasthagr
 /arch/xtensa/                             @andrewboie @dcpleung @andyross
 /soc/xtensa/                              @andrewboie @dcpleung @andyross
+/arch/sparc/                              @martin-aberg
+/soc/sparc/                               @martin-aberg
 /boards/arc/                              @abrodkin @ruuddw
 /boards/arm/                              @MaureenHelm @galak
 /boards/arm/96b_argonkey/                 @avisconti
@@ -134,6 +136,7 @@
 /boards/xtensa/                           @nashif @dcpleung
 /boards/xtensa/intel_s1000_crb/           @sathishkuttan @dcpleung
 /boards/xtensa/odroid_go/                 @ydamigos
+/boards/sparc/                            @martin-aberg
 # All cmake related files
 /cmake/                                   @tejlmand @nashif
 /cmake/*/arcmwdt/                         @abrodkin @evgeniy-paltsev @tejlmand
@@ -150,6 +153,7 @@
 /doc/reference/networking/can*            @alexanderwachter
 /doc/security/                            @ceolin @d3zd3z
 /drivers/debug/                           @nashif
+/drivers/*/*sam4l*                        @nandojve
 /drivers/*/*cc13xx_cc26xx*                @bwitherspoon
 /drivers/*/*mcux*                         @MaureenHelm
 /drivers/*/*stm32*                        @erwango @ABOSTM @FRASTM
@@ -223,6 +227,7 @@
 /drivers/led/                             @Mani-Sadhasivam
 /drivers/led_strip/                       @mbolivar-nordic
 /drivers/lora/                            @Mani-Sadhasivam
+/drivers/memc/                            @gmarull
 /drivers/modem/                           @mike-scott
 /drivers/modem/hl7800.c                   @rerickson1
 /drivers/modem/Kconfig.hl7800             @rerickson1
@@ -235,6 +240,7 @@
 /drivers/pwm/*npcx*                       @MulinChao
 /drivers/pwm/*sam0*                       @nzmichaelh
 /drivers/pwm/*stm32*                      @gmarull
+/drivers/pwm/*xlnx*                       @henrikbrixandersen
 /drivers/regulator/                       @pabigot
 /drivers/sensor/                          @MaureenHelm
 /drivers/sensor/ams_iAQcore/              @alexanderwachter
@@ -260,6 +266,7 @@
 /drivers/serial/*xmc4xxx*                 @parthitce
 /drivers/serial/*nuvoton*                 @ssekar15
 /drivers/serial/*npcx*                    @MulinChao
+/drivers/serial/*apbuart*                 @martin-aberg
 /drivers/net/                             @jukkar @tbursztyka
 /drivers/ptp_clock/                       @jukkar
 /drivers/pwm/*rv32m1*                     @henrikbrixandersen
@@ -276,7 +283,8 @@
 /drivers/timer/cc13x2_cc26x2_rtc_timer.c  @vanti
 /drivers/timer/cavs_timer.c               @dcpleung
 /drivers/timer/stm32_lptim_timer.c        @FRASTM
-/drivers/usb/                             @jfischer-phytec-iot @finikorg
+/drivers/timer/leon_gptimer.c             @martin-aberg
+/drivers/usb/                             @jfischer-no @finikorg
 /drivers/usb/device/usb_dc_stm32.c        @ydamigos @loicpoulain
 /drivers/video/                           @loicpoulain
 /drivers/i2c/i2c_ll_stm32*                @ydamigos
@@ -324,6 +332,7 @@
 /dts/arm/xilinx/                          @bbolen @stephanosio
 /dts/xtensa/xtensa.dtsi                   @ydamigos
 /dts/xtensa/intel/                        @dcpleung
+/dts/sparc/                               @martin-aberg
 /dts/bindings/                            @galak
 /dts/bindings/can/                        @alexanderwachter
 /dts/bindings/i2c/zephyr*i2c-emul.yaml    @sjg20
@@ -378,6 +387,7 @@
 /include/arch/x86/                        @andrewboie @wentongwu
 /include/arch/common/                     @andrewboie @andyross @nashif
 /include/arch/xtensa/                     @andrewboie
+/include/arch/sparc/                      @martin-aberg
 /include/sys/atomic.h                     @andrewboie @andyross
 /include/bluetooth/                       @joerchan @jhedberg @Vudentz
 /include/cache.h                          @andrewboie @andyross
@@ -454,7 +464,7 @@
 /samples/net/mqtt_publisher/              @jukkar @tbursztyka
 /samples/net/sockets/coap_*/              @rlubos
 /samples/net/sockets/                     @jukkar @tbursztyka @pfalcon
-/samples/net/sockets/*civetweb*           @Nukersson
+/samples/net/*civetweb*                   @Nukersson
 /samples/sensor/                          @MaureenHelm
 /samples/shields/                         @avisconti
 /samples/subsys/logging/                  @nordic-krch @jakub-uC
@@ -462,7 +472,7 @@
 /samples/subsys/mgmt/mcumgr/smp_svr/      @aunsbjerg @nvlsianpu
 /samples/subsys/mgmt/updatehub/           @nandojve @otavio
 /samples/subsys/mgmt/osdp/                @cbsiddharth
-/samples/subsys/usb/                      @jfischer-phytec-iot @finikorg
+/samples/subsys/usb/                      @jfischer-no @finikorg
 /samples/subsys/power/                    @wentongwu @pabigot @ceolin
 /samples/tfm_integration/                 @ioannisg @microbuilder
 /samples/userspace/                       @andrewboie
@@ -514,7 +524,7 @@
 /subsys/disk/disk_access_usdhc.c          @JunYangNXP
 /subsys/disk/disk_access_stm32_sdmmc.c    @anthonybrandon
 /subsys/emul/                             @sjg20
-/subsys/fb/                               @jfischer-phytec-iot
+/subsys/fb/                               @jfischer-no
 /subsys/fs/                               @nashif
 /subsys/fs/fcb/                           @nvlsianpu
 /subsys/fs/fuse_fs_access.c               @vanwinkeljan
@@ -551,7 +561,7 @@
 /subsys/storage/                          @nvlsianpu
 /subsys/testsuite/                        @nashif
 /subsys/timing/                           @nashif @dcpleung
-/subsys/usb/                              @jfischer-phytec-iot @finikorg
+/subsys/usb/                              @jfischer-no @finikorg
 /tests/                                   @nashif
 /tests/application_development/libcxx/    @pabigot
 /tests/arch/arm/                          @ioannisg @stephanosio
@@ -589,4 +599,5 @@
 /tests/subsys/shell/                      @jakub-uC @nordic-krch
 # Get all docs reviewed
 *.rst                                     @nashif
+/doc/reference/kernel/                    @andrewboie @andyross @nashif
 *posix*.rst                               @aescolar @daor-oti

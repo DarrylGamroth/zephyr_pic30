@@ -83,6 +83,10 @@
 
   #elif defined(CONFIG_ARCH_POSIX)
 
+  #elif defined(CONFIG_SPARC)
+
+    #define PERFOPT_ALIGN .align  4
+
   #else
 
     #error Architecture unsupported

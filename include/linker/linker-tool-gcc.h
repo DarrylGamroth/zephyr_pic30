@@ -49,6 +49,8 @@
 	/* Not needed */
 #elif defined(CONFIG_ARCH_POSIX)
 	/* Not needed */
+#elif defined(CONFIG_SPARC)
+	OUTPUT_FORMAT("elf32-sparc")
 #elif defined(CONFIG_PIC30)
 	/* Not needed */
 #else

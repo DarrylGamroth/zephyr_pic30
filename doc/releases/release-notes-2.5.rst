@@ -9,6 +9,9 @@ We are pleased to announce the release of Zephyr RTOS version 2.5.0.
 
 Major enhancements with this release include:
 
+* Introduced support for the SPARC processor architecture and the LEON
+  processor implementation.
+
 The following sections provide detailed lists of changes by component.
 
 Security Vulnerability Related
@@ -79,6 +82,11 @@ Architectures
 
 * RISC-V
 
+* SPARC
+
+  * Added support for the SPARC architecture, compatible with the SPARC V8
+    specification and the SPARC ABI.
+
 * x86
 
 Boards & SoC Support
@@ -91,6 +99,12 @@ Boards & SoC Support
 * Changes for ARC boards:
 
 * Added support for these ARM boards:
+
+* Added support for these SPARC boards:
+
+  * GR716-MINI LEON3FT microcontroller development board
+  * Generic LEON3 board configuration for GRLIB FPGA reference designs
+  * SPARC QEMU for emulating LEON3 processors and running kernel tests
 
 * Made these changes in other boards:
 
@@ -175,6 +189,10 @@ Drivers and Sensors
 
 * USB
 
+  * Made USB DFU class compatible with the target configuration that does not
+    have a secondary image slot.
+  * Support to use USB DFU within MCUBoot with single application slot mode.
+
 * Video
 
 * Watchdog
@@ -246,6 +264,9 @@ Libraries / Subsystems
 
 * Storage
 
+  * flash_map: Added API to get the value of an erased byte in the flash_area,
+    see ``flash_area_erased_val()``.
+
 * Tracing
 
 * Debug
@@ -272,13 +293,16 @@ MCUBoot
   * Fixed issue causing that interrupted swap-move operation might brick device
     if the primary image was padded.
   * Fixed issue causing that HW stack protection catches the chain-loaded
-    application during its early ini, by disableing HW stack protection
-    (temporary hack).
+    application during its early initialization.
   * Added reset of Cortex SPLIM registers before boot.
   * Fixesd build issue that occurs if CONF_FILE contains multiple file paths
     instead of single file path.
   * Added watchdog feed on nRF devices. See ``CONFIG_BOOT_WATCHDOG_FEED`` option.
   * Removed the flash_area_read_is_empty() port implementation function.
+  * Initialize the ARM core configuration only when selected by the user,
+    see ``CONFIG_MCUBOOT_CLEANUP_ARM_CORE``.
+  * Allow the final data chunk in the image to be unaligned in
+    the serial-recovery protocol.
 
 * imgtool
 
