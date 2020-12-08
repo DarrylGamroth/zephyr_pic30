@@ -165,7 +165,7 @@ config IDLE_STACK_SIZE
 	default 1024 if XTENSA
 	default 512 if RISCV
 	default 384 if DYNAMIC_OBJECTS
-	default 320 if ARC || (ARM && CPU_HAS_FPU)
+	default 320 if ARC || (ARM && CPU_HAS_FPU) || (X86 && MMU)
 	default 256
 	help
 	  Depending on the work that the idle task must do, most likely due to
@@ -501,16 +501,6 @@ config KERNEL_MEM_POOL
 	  Say y if unsure.
 
 if KERNEL_MEM_POOL
-
-config MEM_POOL_HEAP_BACKEND
-	bool "Use k_heap as the backend for k_mem_pool"
-	default y
-	help
-	  This selects a backend implementation for k_mem_pool based
-	  on the sys_heap abstraction instead of the legacy
-	  sys_mem_pool.  This backend has significantly better
-	  performance and memory utilization for general purpose
-	  workloads.
 
 config HEAP_MEM_POOL_SIZE
 	int "Heap memory pool size (in bytes)"

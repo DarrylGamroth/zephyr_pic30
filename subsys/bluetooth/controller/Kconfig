@@ -193,6 +193,23 @@ config BT_CTLR_TX_BUFFER_SIZE
 	  Maximum is set to 251 due to implementation limitations (use of
 	  uint8_t for length field in PDU buffer structure).
 
+config BT_CTLR_ISO_TX_BUFFERS
+	int "Number of Isochronous Tx buffers"
+	default 3
+	range 1 19
+	depends on BT_CTLR_ADV_ISO || BT_CTLR_CENTRAL_ISO || BT_CTLR_PERIPHERAL_ISO
+	help
+	  Set the number of Isochronous Tx PDUs to be queued for transmission
+	  in the controller.
+
+config BT_CTLR_ISO_TX_BUFFER_SIZE
+	int "Isochronous Tx buffer size"
+	range 1 4095
+	default 27
+	help
+	  Size of the Isochronous Tx buffers and the value returned in HCI LE
+	  Read Buffer Size V2 command response.
+
 choice BT_CTLR_TX_PWR
 	prompt "Tx Power"
 	default BT_CTLR_TX_PWR_0
@@ -489,6 +506,14 @@ config BT_CTLR_SYNC_ISO
 	  Enable support for Bluetooth 5.2 LE Isochronous Advertising sync in
 	  the Controller.
 
+config BT_CTLR_ADV_ISO_SET
+	int "LE Isochronous Channel advertising sets"
+	depends on BT_CTLR_ADV_ISO
+	range 1 32
+	default 1
+	help
+	  Maximum supported advertising sets.
+
 config BT_CTLR_SYNC_ISO
 	bool "LE Broadcast Isochronous Channel advertising sync [EXPERIMENTAL]" if BT_LL_SW_SPLIT
 
@@ -500,6 +525,11 @@ config BT_CTLR_ADV_DATA_LEN_MAX
 
 endif # BT_CTLR_ADV_EXT
 
+config BT_CTLR_SET_HOST_FEATURE
+	bool "LE Set Host Feature Command [EXPERIMENTAL]"
+	help
+	  Enables optional LE Set Host Feature Command
+
 config BT_CTLR_CENTRAL_ISO
 	bool "LE Connected Isochronous Stream Central" if !BT_LL_SW_SPLIT
 	depends on BT_CTLR_CENTRAL_ISO_SUPPORT && BT_CENTRAL
@@ -509,6 +539,7 @@ config BT_CTLR_CENTRAL_ISO
 
 config BT_CTLR_CENTRAL_ISO
 	bool "LE Connected Isochronous Stream Central [EXPERIMENTAL]" if BT_LL_SW_SPLIT
+	select BT_CTLR_SET_HOST_FEATURE
 
 config BT_CTLR_PERIPHERAL_ISO
 	bool "LE Connected Isochronous Stream Peripheral" if !BT_LL_SW_SPLIT
@@ -519,6 +550,7 @@ config BT_CTLR_PERIPHERAL_ISO
 
 config BT_CTLR_PERIPHERAL_ISO
 	bool "LE Connected Isochronous Stream Peripheral [EXPERIMENTAL]" if BT_LL_SW_SPLIT
+	select BT_CTLR_SET_HOST_FEATURE
 
 config BT_CTLR_DTM
 	bool

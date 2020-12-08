@@ -21,6 +21,9 @@ uint8_t ll_addr_set(uint8_t addr_type, uint8_t const *const p_bdaddr);
 uint8_t ll_adv_set_by_hci_handle_get(uint8_t hci_handle, uint8_t *handle);
 uint8_t ll_adv_set_by_hci_handle_get_or_new(uint8_t hci_handle,
 					    uint8_t *handle);
+uint8_t ll_adv_set_hci_handle_get(uint8_t handle);
+uint8_t ll_adv_iso_by_hci_handle_get(uint8_t hci_handle, uint8_t *handle);
+uint8_t ll_adv_iso_by_hci_handle_new(uint8_t hci_handle, uint8_t *handle);
 #else
 static inline uint8_t ll_adv_set_by_hci_handle_get(uint8_t hci_handle,
 						   uint8_t *handle)
@@ -35,7 +38,30 @@ static inline uint8_t ll_adv_set_by_hci_handle_get_or_new(uint8_t hci_handle,
 	*handle = hci_handle;
 	return 0;
 }
+
+static inline uint8_t ll_adv_set_hci_handle_get(uint8_t handle)
+{
+	return handle;
+}
+
+static inline uint8_t ll_adv_iso_by_hci_handle_get(uint8_t hci_handle,
+						   uint8_t *handle)
+{
+	*handle = hci_handle;
+	return 0;
+}
+
+static inline uint8_t ll_adv_iso_by_hci_handle_new(uint8_t hci_handle,
+						   uint8_t *handle)
+{
+	*handle = hci_handle;
+	return 0;
+}
 #endif
+
+void *ll_iso_tx_mem_acquire(void);
+void ll_iso_tx_mem_release(void *tx);
+int ll_iso_tx_mem_enqueue(uint16_t handle, void *tx);
 
 #if defined(CONFIG_BT_CTLR_ADV_EXT)
 #if defined(CONFIG_BT_HCI_RAW)
@@ -157,9 +183,20 @@ uint8_t ll_configure_data_path(uint8_t data_path_dir,
 			       uint8_t data_path_id,
 			       uint8_t vs_config_len,
 			       uint8_t  *vs_config);
+uint8_t ll_read_iso_tx_sync(uint16_t handle, uint16_t *seq,
+			    uint32_t *timestamp, uint32_t *offset);
+uint8_t ll_read_iso_link_quality(uint16_t  handle,
+				 uint32_t *tx_unacked_packets,
+				 uint32_t *tx_flushed_packets,
+				 uint32_t *tx_last_subevent_packets,
+				 uint32_t *retransmitted_packets,
+				 uint32_t *crc_error_packets,
+				 uint32_t *rx_unreceived_packets,
+				 uint32_t *duplicate_packets);
+uint8_t ll_set_host_feature(uint8_t bit_number, uint8_t bit_value);
 uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 			  uint8_t coding_format, uint16_t company_id,
-			  uint16_t vendor_id, uint32_t controller_delay,
+			  uint16_t vs_codec_id, uint32_t controller_delay,
 			  uint8_t codec_config_len, uint8_t *codec_config);
 uint8_t ll_remove_iso_path(uint16_t handle, uint8_t path_dir);
 uint8_t ll_iso_receive_test(uint16_t handle, uint8_t payload_type);

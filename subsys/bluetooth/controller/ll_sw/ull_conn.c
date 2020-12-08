@@ -1084,7 +1084,14 @@ void ull_conn_done(struct node_rx_event_done *done)
 	}
 
 	/* Events elapsed used in timeout checks below */
+#if defined(CONFIG_BT_CTLR_CONN_META)
+	/* If event has shallow expiry do not add latency, but rely on
+	 * accumulated lazy count.
+	 */
+	latency_event = conn->common.is_must_expire ? 0 : lll->latency_event;
+#else
 	latency_event = lll->latency_event;
+#endif
 	elapsed_event = latency_event + 1;
 
 	/* Slave drift compensation calc and new latency or
@@ -3448,7 +3455,7 @@ static inline void event_phy_req_prep(struct ll_conn *conn)
 		/* update preferred phy */
 		conn->phy_pref_tx = conn->llcp_phy.tx;
 		conn->phy_pref_rx = conn->llcp_phy.rx;
-		conn->phy_pref_flags = conn->llcp_phy.flags;
+		conn->lll.phy_flags = conn->llcp_phy.flags;
 
 		/* place the phy req packet as next in tx queue */
 		pdu_ctrl_tx = (void *)tx->pdu;
@@ -3666,7 +3673,6 @@ static inline void event_phy_upd_ind_prep(struct ll_conn *conn,
 
 #endif /* CONFIG_BT_CTLR_DATA_LENGTH */
 		}
-		lll->phy_flags = conn->phy_pref_flags;
 
 		/* Acquire Rx node */
 		rx = conn->llcp_rx;
