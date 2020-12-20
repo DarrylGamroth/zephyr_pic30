@@ -47,7 +47,7 @@ struct __packed z_thread_stack_element {
 /**
  * @brief Properly align a CPU stack pointer value
  *
- * Take the provided value and round it down such that the value is aligned
+ * Take the provided value and round it such that the value is aligned
  * to the CPU and ABI requirements. This is not used for any memory protection
  * hardware requirements.
  *
@@ -56,7 +56,11 @@ struct __packed z_thread_stack_element {
  */
 static inline char *z_stack_ptr_align(char *ptr)
 {
+#if defined(CONFIG_STACK_GROWS_UP)
+	return (char *)ROUND_UP(ptr, ARCH_STACK_PTR_ALIGN);
+#else
 	return (char *)ROUND_DOWN(ptr, ARCH_STACK_PTR_ALIGN);
+#endif
 }
 #define Z_STACK_PTR_ALIGN(ptr) ((uintptr_t)z_stack_ptr_align((char *)(ptr)))
 

@@ -269,9 +269,14 @@ static char *prepare_multithreading(void)
 		init_idle_thread(i);
 		_kernel.cpus[i].idle_thread = &z_idle_threads[i];
 		_kernel.cpus[i].id = i;
+#if defined(CONFIG_STACK_GROWS_UP)
+		_kernel.cpus[i].irq_stack =
+			Z_KERNEL_STACK_BUFFER(z_interrupt_stacks[i]);
+#else
 		_kernel.cpus[i].irq_stack =
 			(Z_KERNEL_STACK_BUFFER(z_interrupt_stacks[i]) +
 			 K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[i]));
+#endif
 	}
 
 	initialize_timeouts();

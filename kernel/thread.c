@@ -453,6 +453,62 @@ static size_t random_offset(size_t stack_size)
 #endif /* CONFIG_STACK_GROWS_UP */
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
+#if defined(CONFIG_STACK_GROWS_UP)
+static char *setup_thread_stack(struct k_thread *new_thread,
+				k_thread_stack_t *stack, size_t stack_size)
+{
+	size_t stack_obj_size, stack_buf_size;
+	char *stack_ptr, *stack_buf_start;
+	size_t delta = 0;
+
+#ifdef CONFIG_USERSPACE
+#error "Userspace is not implemented for upward growing stacks"
+#endif
+
+#ifdef CONFIG_STACK_SENTINEL
+#error "Stack sentinel is not implemented for upward growing stacks"
+#endif
+
+#ifdef CONFIG_THREAD_LOCAL_STORAGE
+#error "Thread local storage is not implemented for upward growing stacks"
+#endif
+
+	/* Object cannot host a user mode thread */
+	stack_obj_size = Z_KERNEL_STACK_SIZE_ADJUST(stack_size);
+	stack_buf_start = Z_KERNEL_STACK_BUFFER(stack);
+	stack_buf_size = stack_obj_size - K_KERNEL_STACK_RESERVED;
+
+	/* Initial stack pointer at the low end of the stack object, may
+	 * be increased later in this function by TLS or random offset
+	 */
+	stack_ptr = (char *)stack;
+
+	LOG_DBG("stack %p for thread %p: obj_size=%zu buf_start=%p "
+		" buf_size %zu stack_ptr=%p",
+		stack, new_thread, stack_obj_size, stack_buf_start,
+		stack_buf_size, stack_ptr);
+
+#ifdef CONFIG_INIT_STACKS
+	memset(stack_buf_start, 0xaa, stack_buf_size);
+#endif
+	delta = ROUND_UP(delta, ARCH_STACK_PTR_ALIGN);
+#ifdef CONFIG_THREAD_STACK_INFO
+	/* Initial values. Arches which implement MPU guards that "borrow"
+	 * memory from the stack buffer (not tracked in K_THREAD_STACK_RESERVED)
+	 * will need to appropriately update this.
+	 *
+	 * The bounds tracked here correspond to the area of the stack object
+	 * that the thread can access, which includes TLS.
+	 */
+	new_thread->stack_info.start = (uintptr_t)stack_buf_start;
+	new_thread->stack_info.size = stack_buf_size;
+	new_thread->stack_info.delta = delta;
+#endif
+	stack_ptr += delta;
+
+	return stack_ptr;
+}
+#else
 static char *setup_thread_stack(struct k_thread *new_thread,
 				k_thread_stack_t *stack, size_t stack_size)
 {
@@ -526,6 +582,7 @@ static char *setup_thread_stack(struct k_thread *new_thread,
 
 	return stack_ptr;
 }
+#endif /* CONFIG_STACK_GROWS_UP */
 
 #define THREAD_COOKIE	0x1337C0D3
 
