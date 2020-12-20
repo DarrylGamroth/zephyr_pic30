@@ -45,6 +45,8 @@ _region_min_align = 2;
 #define MPU_ALIGN(region_size) \
     . = ALIGN(_region_min_align)
 
+__CODE_BASE = 0x200;
+
 MEMORY
     {
     ROMABLE_REGION	(rx)   : ORIGIN = ROM_ADDR, LENGTH = ROM_SIZE
@@ -60,148 +62,119 @@ SECTIONS
 
     GROUP_START(ROMABLE_REGION)
 
-	SYMBOL(_image_rom_start) = ROM_ADDR;
-
-    SECTION_PROLOGUE(rom_start,,)
-	{
-
-/* Located in generated directory. This file is populated by calling
- * zephyr_linker_sources(ROM_START ...). This typically contains the vector
- * table and debug information.
- */
-#include <snippets-rom-start.ld>
-
-	} GROUP_LINK_IN(ROMABLE_REGION)
+    SYMBOL(_image_rom_start) = ROM_ADDR;
 
     SECTION_PROLOGUE(_TEXT_SECTION_NAME,,)
-	{
-	SYMBOL(_image_text_start) = .;
+    {
+        SYMBOL(_image_text_start) = .;
 
-#include <linker/kobject-text.ld>
-  /*
-  ** Note that input sections *(.text) are not mapped here.
-  ** The best-fit allocator locates them, so that .text
-  ** may flow around PSV sections as needed.
-  */
-	*(.init)
-	*(.text)
-	*(".text.*")
-	KEEP(*(.handle))
-	*(.libm) *(.libdsp)  /* keep together in this order */
-	*(.gnu.linkonce.t.*)
+        #include <snippets-rom-start.ld>
 
-	} GROUP_LINK_IN(ROMABLE_REGION)
+	. = __CODE_BASE;
 
-	SYMBOL(_image_text_end) = .;
+	/* Don't specify text sections to allow the best-fit allocator
+	 * flow around PSV sections.
+	 */
+        *(.reset)
+        *(".reset.*")
+        KEEP(*(.handle))
+        *(.gnu.linkonce.t.*)
+	/* keep together in this order */
+        *(.libm)
+        *(".libm.*")
+	*(.libdsp)
+	*(".libdsp.*")
 
-	SYMBOL(_image_rodata_start) = .;
+    } GROUP_LINK_IN(ROMABLE_REGION)
 
-#include <linker/common-rom.ld>
+    SYMBOL(_image_text_end) = .;
+    SYMBOL(_image_text_size) = SYMBOL(_image_text_end) -
+        SYMBOL(_image_text_start);
 
-    SECTION_PROLOGUE(_RODATA_SECTION_NAME,,)
-	{
+
+    SYMBOL(_image_rodata_start) = .;
+
+    /* Replace common-rom.ld with snippet */
+    #include <linker/common-rom.ld>
+
+    SECTION_PROLOGUE(.const,,)
+    {
+        *(.const);
+        *(".const.*");
+    } GROUP_LINK_IN(ROMABLE_REGION)
+
+
+    SECTION_RODATA_PROLOGUE(_RODATA_SECTION_NAME,,)
+    {
 	*(.rodata)
 	*(".rodata.*")
 	*(.gnu.linkonce.r.*)
-
 /* Located in generated directory. This file is populated by the
  * zephyr_linker_sources() Cmake function.
  */
-#include <snippets-rodata.ld>
+        #include <snippets-rodata.ld>
 
-#include <linker/kobject-rom.ld>
+    } GROUP_LINK_IN(ROMABLE_REGION)
 
-	/*
-	 * For XIP images, in order to avoid the situation when __data_rom_start
-	 * is 16-bit aligned, but the actual data is placed right after rodata
-	 * section, which may not end exactly at 16-bit border, pad rodata
-	 * section, so __data_rom_start points at data and it is 16-bit aligned.
-	 *
-	 * On non-XIP images this may enlarge image size up to 1 bytes. This
-	 * generally is not an issue, since modern ROM and FLASH memory is
-	 * usually 4k aligned.
-	 */
-	. = ALIGN(2);
-	} GROUP_LINK_IN(ROMABLE_REGION)
-
-#include <linker/cplusplus-rom.ld>
-
-	SYMBOL(_image_rodata_end) = .;
-	MPU_ALIGN(_image_rodata_end -_image_rom_start);
-	SYMBOL(_image_rom_end) = .;
+    SYMBOL(_image_rodata_end) = .;
+    SYMBOL(_image_rodata_size) = SYMBOL(_image_rodata_end) -
+        SYMBOL(_image_rodata_start);
+    SYMBOL(_image_rom_end) = .;
 
     GROUP_END(ROMABLE_REGION)
 
     GROUP_START(RAMABLE_REGION)
 
-	. = RAM_ADDR;
-	/* Align the start of image SRAM with the
-	 * minimum granularity required by MPU.
-	 */
-	. = ALIGN(_region_min_align);
-	SYMBOL(_image_ram_start) = .;
+    SYMBOL(_image_ram_start) = .;
 
 /* Located in generated directory. This file is populated by the
  * zephyr_linker_sources() Cmake function.
  */
-#include <snippets-ram-sections.ld>
+    #include <snippets-ram-sections.ld>
 
-    SECTION_DATA_PROLOGUE(_DATA_SECTION_NAME,,)
-	{
-	SYMBOL(__data_ram_start) = .;
-	*(.data)
-	*(".data.*")
-	*(".kernel.*")
+    SYMBOL(__kernel_ram_start) = .;
+
+#if 0
+    SECTION_DATA_PROLOGUE(_BSS_SECTION_NAME,(NOLOAD),)
+    {
+        . = ALIGN(2);
+	SYMBOL(__bss_start) = .;
+	*(.bss)
+	*(".bss.*")
+	COMMON_SYMBOLS
+	*(".kernel_bss.*")
+
+        /*
+         * As memory is cleared in words only, it is simpler to ensure the BSS
+         * section ends on a 2 byte boundary. This wastes a maximum of 1 bytes.
+         */
+	SYMBOL(__bss_end) = ALIGN(2);
+    } GROUP_LINK_IN(RAMABLE_REGION)
+#endif
+
+    #include <linker/common-noinit.ld>
+
+    SECTION_DATA_PROLOGUE(.data,,)
+    {
+        SYMBOL(__data_ram_start) = .;
+        *(.data)
+        *(".data.*")
+        *(".kernel.*")
 
 /* Located in generated directory. This file is populated by the
  * zephyr_linker_sources() Cmake function.
  */
-#include <snippets-rwdata.ld>
+        #include <snippets-rwdata.ld>
 
-	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
+    } GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
-    SYMBOL(__data_rom_start) = LOADADDR(_DATA_SECTION_NAME);
+    SYMBOL(__data_rom_start) = LOADADDR(.data);
 
-#include <linker/common-ram.ld>
-#include <linker/kobject.ld>
-
-#include <linker/cplusplus-ram.ld>
+    #include <linker/common-ram.ld>
 
     SYMBOL(__data_ram_end) = .;
 
-   SECTION_DATA_PROLOGUE(_BSS_SECTION_NAME,(NOLOAD),)
-	{
-        . = ALIGN(2);
-	SYMBOL(__bss_start) = .;
-	SYMBOL(__kernel_ram_start) = .;
-
-	*(.bss)
-	*(".bss.*")
-	*(COMMON)
-	*(".kernel_bss.*")
-
-	SYMBOL(__bss_end) = ALIGN(2);
-	} GROUP_DATA_LINK_IN(RAMABLE_REGION, RAMABLE_REGION)
-
-    SECTION_PROLOGUE(_NOINIT_SECTION_NAME,(NOLOAD),)
-        {
-        /*
-         * This section is used for non-initialized objects that
-         * will not be cleared during the boot process.
-         */
-        *(.noinit)
-        *(".noinit.*")
-	*(".kernel_noinit.*")
-
-/* Located in generated directory. This file is populated by the
- * zephyr_linker_sources() Cmake function.
- */
-#include <snippets-noinit.ld>
-
-        } GROUP_LINK_IN(RAMABLE_REGION)
-
     /* Define linker symbols */
-
     SYMBOL(_image_ram_end) = .;
     SYMBOL(_end) = .; /* end of image */
 
@@ -217,17 +190,22 @@ SECTIONS
 
 #include <linker/debug-sections.ld>
 
-    /DISCARD/ : { *(.note.GNU-stack) }
+/DISCARD/ : {
+	*(.note.GNU-stack)
+	*(.got.plt)
+	*(.igot.plt)
+	*(.got)
+	*(.igot)
+}
 
+    /* Must be last in romable region */
+    SECTION_PROLOGUE(.last_section,(NOLOAD),)
+    {
+    } GROUP_LINK_IN(ROMABLE_REGION)
 
-/* Must be last in romable region */
-SECTION_PROLOGUE(.last_section,(NOLOAD),)
-{
-} GROUP_LINK_IN(ROMABLE_REGION)
-
-/* To provide the image size as a const expression,
- * calculate this value here. */
-SYMBOL(_flash_used) = LOADADDR(.last_section) - SYMBOL(_image_rom_start);
+    /* To provide the image size as a const expression,
+     * calculate this value here. */
+    SYMBOL(_flash_used) = LOADADDR(.last_section) - SYMBOL(_image_rom_start);
 
     }
 
@@ -328,5 +306,27 @@ _DMTPSINTVL   = 0x78;
  DMTPSINTVH   = 0x7A;
 _DMTPSINTVH   = 0x7A;
 
+ IFS0         = 0x800;
+_IFS0         = 0x800;
+_IFS0bits     = 0x800;
+ IEC0         = 0x820;
+_IEC0         = 0x820;
+_IEC0bits     = 0x820;
+ IPC0         = 0x840;
+_IPC0         = 0x840;
+_IPC0bits     = 0x840;
+ INTCON1      = 0x8C0;
+_INTCON1      = 0x8C0;
+_INTCON1bits  = 0x8C0;
  INTCON2      = 0x8C2;
 _INTCON2      = 0x8C2;
+_INTCON2bits  = 0x8C2;
+ INTCON3      = 0x8C4;
+_INTCON3      = 0x8C4;
+_INTCON3bits  = 0x8C4;
+ INTCON4      = 0x8C6;
+_INTCON4      = 0x8C6;
+_INTCON4bits  = 0x8C6;
+ INTTREG      = 0x8C8;
+_INTTREG      = 0x8C8;
+_INTTREGbits  = 0x8C8;

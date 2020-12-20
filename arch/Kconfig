@@ -103,6 +103,7 @@ config PIC30
 	select USE_SWITCH_SUPPORTED
 	select STACK_GROWS_UP
 	select ARCH_HAS_STACK_PROTECTION
+	select THREAD_STACK_INFO
 	imply XIP
 	help
 	  PIC30 architecture

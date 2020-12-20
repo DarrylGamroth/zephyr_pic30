@@ -27,36 +27,47 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 {
 	z_arch_esf_t *pInitCtx;
 
-	//pInitCtx = Z_STACK_PTR_TO_FRAME(struct __esf, stack_ptr);
-	pInitCtx = Z_STACK_PTR_TO_FRAME(z_arch_esf_t, stack_ptr);
+	pInitCtx = (z_arch_esf_t *)stack_ptr;
 
-    /* Emulate the stack frame of an interrupt call */
+	/* Emulate the stack frame of an interrupt call */
 
-    /* Set SR to enable all interrupts */
-    pInitCtx->srl_ipl3_pch = 0;
-    pInitCtx->pcl_sfa = (uint16_t)entry;
+	/* Set SR to enable all interrupts */
+	pInitCtx->pcl_sfa = (uint16_t)z_thread_entry;
+	pInitCtx->srl_ipl3_pch = 0;
 
 	pInitCtx->w0 = (uint16_t)entry;
 	pInitCtx->w1 = (uint16_t)p1;
 	pInitCtx->w2 = (uint16_t)p2;
 	pInitCtx->w3 = (uint16_t)p3;
+	pInitCtx->w4 = 0x4444u;
+	pInitCtx->w5 = 0x5555u;
+	pInitCtx->w6 = 0x6666u;
+	pInitCtx->w7 = 0x7777u;
+	pInitCtx->accal = 0x000a;
+	pInitCtx->accah = 0x00aa;
+	pInitCtx->accau = 0x0aaa;
+	pInitCtx->accbl = 0x000b;
+	pInitCtx->accbh = 0x00bb;
+	pInitCtx->accbu = 0x0bbb;
 
-    pInitCtx->tblpag = TBLPAG;
-    pInitCtx->dsrpag = DSRPAG;
-    pInitCtx->dswpag = DSWPAG;
+	pInitCtx->tblpag = TBLPAG;
+	pInitCtx->dsrpag = DSRPAG;
+	pInitCtx->dswpag = DSWPAG;
 
-    /* Set the SPLIM register to point to the end of the stack */
-	pInitCtx->splim = 0U;
+	pInitCtx->splim = thread->stack_info.start + thread->stack_info.size;
 
-    /* Set SR to enable all interrupts */
+	/* Set SR to enable all interrupts */
 	pInitCtx->sr = 0U;
 	pInitCtx->corcon = CORCON;
 
-	/*
-	 * We are saving SP to pop out entry and parameters when going through
-	 * z_pic30_exit_exc()
-	 */
-	thread->callee_saved.w15 = (uint16_t)pInitCtx;
+	thread->callee_saved.w8 = 0x8888u;
+	thread->callee_saved.w9 = 0x9999u;
+	thread->callee_saved.w10 = 0xaaaau;
+	thread->callee_saved.w11 = 0xbbbbu;
+	thread->callee_saved.w12 = 0xccccu;
+	thread->callee_saved.w13 = 0xddddu;
+	thread->callee_saved.w14 = 0xeeeeu;
+	thread->callee_saved.w15 = (uint16_t)(stack_ptr + sizeof(z_arch_esf_t));
 
 	thread->switch_handle = thread;
 }

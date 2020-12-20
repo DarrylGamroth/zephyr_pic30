@@ -20,60 +20,53 @@
  * INTC Register Interface Base Addresses
  */
 
-#define PIC30_INTC_BASE DT_INST_REG_ADDR(0)
+#define PIC30_INTC_BASE		DT_REG_ADDR_BY_IDX(DT_INST(0, microchip_pic30_intc), 0)
 
 /*
  * 0x000  Interrupt Status Flag Register Base
  */
-#define PIC30_IFS_BASE      ((PIC30_INTC_BASE) + 0x00U)
+#define PIC30_IFS_BASE		((PIC30_INTC_BASE) + 0x00U)
 
 /*
  * 0x020  Interrupt Enable Control Register Base
  */
-#define PIC30_IEC_BASE      ((PIC30_INTC_BASE) + 0x20U)
+#define PIC30_IEC_BASE		((PIC30_INTC_BASE) + 0x20U)
 
 /*
  * 0x040  Interrupt Priority Control Register Base
  */
-#define PIC30_IPC_BASE      ((PIC30_INTC_BASE) + 0x40U)
+#define PIC30_IPC_BASE		((PIC30_INTC_BASE) + 0x40U)
 
 /*
  * 0x0C0  Interrupt Control Regsiter 1
  */
-#define PIC30_INTCON1       ((PIC30_INTC_BASE) + 0xC0U)
+#define PIC30_INTCON1		((PIC30_INTC_BASE) + 0xC0U)
 
 /*
  * 0x0C2  Interrupt Control Regsiter 1
  */
-#define PIC30_INTCON2       ((PIC30_INTC_BASE) + 0xC2U)
+#define PIC30_INTCON2		((PIC30_INTC_BASE) + 0xC2U)
 
 /*
  * 0x0C4  Interrupt Control Regsiter 1
  */
-#define PIC30_INTCON3       ((PIC30_INTC_BASE) + 0xC4U)
+#define PIC30_INTCON3		((PIC30_INTC_BASE) + 0xC4U)
 
 /*
  * 0x0C6  Interrupt Control Regsiter 1
  */
-#define PIC30_INTCON4       ((PIC30_INTC_BASE) + 0xC6U)
+#define PIC30_INTCON4		((PIC30_INTC_BASE) + 0xC6U)
 
 /*
  * 0x0C6  Interrupt Control and Status Register
  */
-#define PIC30_INTTREG       ((PIC30_INTC_BASE) + 0xC8U)
+#define PIC30_INTTREG		((PIC30_INTC_BASE) + 0xC8U)
 
 #ifndef _ASMLANGUAGE
 
 /*
  * INTC Driver Interface Functions
  */
-
-/**
- * @brief Initialise INTC driver
- *
- * @return 0 if successful
- */
-int pic30_intc_init(void);
 
 /**
  * @brief Enable interrupt
@@ -109,7 +102,16 @@ void pic30_intc_irq_pending_set(unsigned int irq);
  *
  * @param irq interrupt ID
  */
-void pic30_intc_irq_pending_clear(unsigned int irq);
+static inline void pic30_intc_irq_pending_clear(unsigned int irq)
+{
+	uint16_t int_grp = irq / 16;
+	uint16_t int_off = irq % 16;
+
+	uint16_t reg = PIC30_IFS_BASE + (int_grp * 2);
+	uint16_t val = 1U << int_off;
+
+	sys_write16(sys_read16(reg) & ~val, reg);
+}
 
 /**
  * @brief Check if an interrupt is pending
@@ -132,7 +134,10 @@ void pic30_intc_irq_set_priority(unsigned int irq, unsigned int prio);
  *
  * @return Returns the ID of an active interrupt
  */
-uint8_t pic30_intc_get_active(void);
+static inline unsigned int pic30_intc_get_active(void)
+{
+	return sys_read8(PIC30_INTTREG);
+}
 
 #endif /* !_ASMLANGUAGE */
 

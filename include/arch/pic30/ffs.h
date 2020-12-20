@@ -29,16 +29,16 @@ extern "C" {
 
 static ALWAYS_INLINE unsigned int find_msb_set(uint32_t op)
 {
-    uint16_t op_lsw = (uint16_t)op;
-    uint16_t op_msw = (uint16_t)(op >> 16UL);
+	uint16_t op_lsw = (uint16_t)op;
+	uint16_t op_msw = (uint16_t)(op >> 16UL);
 
 	if (op == 0) {
 		return 0;
 	} else if (op_msw) {
-        return 32U - (__builtin_ff1l(op_msw) + 1);
-    } else {
-        return 16U - (__builtin_ff1l(op_lsw) + 1);
-    }
+		return 32U - (__builtin_ff1l(op_msw) - 1);
+	} else {
+		return 16U - (__builtin_ff1l(op_lsw) - 1);
+	}
 }
 
 
@@ -56,22 +56,22 @@ static ALWAYS_INLINE unsigned int find_msb_set(uint32_t op)
 
 static ALWAYS_INLINE unsigned int find_lsb_set(uint32_t op)
 {
-    uint16_t op_lsw = (uint16_t)op;
-    uint16_t op_msw = (uint16_t)(op >> 16UL);
+	uint16_t op_lsw = (uint16_t)op;
+	uint16_t op_msw = (uint16_t)(op >> 16UL);
 
-    if (op == 0) {
-        return 0;
-    } else if (op_lsw) {
-        return __builtin_ff1r(op_lsw);
-    } else {
-	    return 16U + __builtin_ff1r(op_msw);
-    }
+	if (op == 0) {
+		return 0;
+	} else if (op_lsw) {
+		return __builtin_ff1r(op_lsw);
+	} else {
+		return 16U + __builtin_ff1r(op_msw);
+	}
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _ASMLANGUAGE */
+#endif  /* _ASMLANGUAGE */
 
-#endif /* ZEPHYR_INCLUDE_ARCH_PIC30_FFS_H_ */
+#endif  /* ZEPHYR_INCLUDE_ARCH_PIC30_FFS_H_ */

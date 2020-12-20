@@ -69,7 +69,9 @@
 
 #endif /* _ASMLANGUAGE */
 
+#ifdef __in_section_unique
 #undef __in_section_unique
 #define __in_section_unique(seg) ___in_section(seg, __LINE__, __COUNTER__)
+#endif
 
 #endif

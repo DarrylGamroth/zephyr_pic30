@@ -17,3 +17,6 @@ zephyr_library_sources(
 
 zephyr_library_sources_ifdef(CONFIG_GEN_SW_ISR_TABLE isr_wrapper.S)
 zephyr_library_sources_ifdef(CONFIG_IRQ_OFFLOAD irq_offload.c)
+
+zephyr_linker_sources(ROM_START SORT_KEY 0x0vectors vector_table.ld)
+zephyr_linker_sources(RAM_SECTIONS SORT_KEY 0x0icd icd.ld)

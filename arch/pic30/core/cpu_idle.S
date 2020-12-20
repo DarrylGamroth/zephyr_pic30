@@ -25,7 +25,7 @@ GTEXT(_arch_cpu_atomic_idle)
  *
  * void arch_cpu_idle(void)
  */
-SECTION_FUNC(text, _arch_cpu_idle)
+SECTION_FUNC(TEXT, _arch_cpu_idle)
 #ifdef CONFIG_TRACING
 	call	_sys_trace_idle
 #endif
@@ -42,7 +42,7 @@ SECTION_FUNC(text, _arch_cpu_idle)
  *
  * void arch_cpu_atomic_idle(unsigned int key)
  */
-SECTION_FUNC(text, _arch_cpu_atomic_idle)
+SECTION_FUNC(TEXT, _arch_cpu_atomic_idle)
 #ifdef CONFIG_TRACING
 	call	_sys_trace_idle
 #endif

@@ -15,7 +15,7 @@
 	soc {
 		flash-controller@8d0 {
 			flash0: flash@0 {
-				reg = <0x0 DT_SIZE_K(256)>;
+				reg = <0x0 DT_SIZE_K(176)>;
 			};
 		};
 	};

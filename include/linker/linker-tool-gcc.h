@@ -139,8 +139,9 @@
  */
 
 #if defined (CONFIG_PIC30)
+/* ALIGN_WITH_INPUT doesn't exist in XC16 */
 #define SECTION_DATA_PROLOGUE(name, options, align) \
-	name options align :
+	SECTION_PROLOGUE(name, options, align)
 #else
 #ifdef CONFIG_XIP
 #define SECTION_DATA_PROLOGUE(name, options, align) \
@@ -149,6 +150,18 @@
 #define SECTION_DATA_PROLOGUE(name, options, align) name options : align
 #endif
 #endif /*CONFIG_PIC30*/
+
+/*
+ * As for SECTION_PROLOGUE(), except that this one must (!) be used
+ * for read-only data sections. This is required for PIC30 platforms as
+ * read-only sections must be mapped into the section .const to be page
+ * managed by the compiler.
+ */
+#if defined (CONFIG_PIC30)
+#define SECTION_RODATA_PROLOGUE(name, options, align) .const options align :
+#else
+#define SECTION_RODATA_PROLOGUE(name, options, align) name options : align
+#endif
 
 #define SORT_BY_NAME(x) SORT(x)
 

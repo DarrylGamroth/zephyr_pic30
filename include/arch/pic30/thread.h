@@ -12,7 +12,7 @@
  *
  *  struct _thread_arch
  *  struct _callee_saved
-  *
+ *
  * necessary to instantiate instances of struct k_thread.
  */
 
@@ -27,14 +27,14 @@
  * saved/restored when a cooperative context switch occurs.
  */
 struct _callee_saved {
-    uint16_t w8;
-    uint16_t w9;
-    uint16_t w10;
-    uint16_t w11;
-    uint16_t w12;
-    uint16_t w13;
-    uint16_t w14;
-    uint16_t w15;
+	uint16_t w8;
+	uint16_t w9;
+	uint16_t w10;
+	uint16_t w11;
+	uint16_t w12;
+	uint16_t w13;
+	uint16_t w14;
+	uint16_t w15;
 };
 
 typedef struct _callee_saved _callee_saved_t;
@@ -45,6 +45,6 @@ struct _thread_arch {
 
 typedef struct _thread_arch _thread_arch_t;
 
-#endif /* _ASMLANGUAGE */
+#endif  /* _ASMLANGUAGE */
 
-#endif /* ZEPHYR_INCLUDE_ARCH_PIC30_THREAD_H_ */
+#endif  /* ZEPHYR_INCLUDE_ARCH_PIC30_THREAD_H_ */

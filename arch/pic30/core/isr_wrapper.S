@@ -26,17 +26,15 @@ GDATA(_sw_isr_table)
  * determines if a context switch needs to happen.
  */
 
-GTEXT(_isr_wrapper)
-SECTION_FUNC(isr, _isr_wrapper)
+GTEXT(__isr_wrapper)
+SECTION_FUNC(isr, __isr_wrapper)
 	z_pic30_enter_exc
-
-	/* ++(_kernel->nested) to be checked by arch_is_in_isr() */
 
 #ifdef CONFIG_TRACING
 	call	_sys_trace_isr_enter
 #endif
 
-	/* Switch to the IRQ stack */
+	/* Disable stack checking */
 	/*
 	 * Set the SPLIM register to the top of RAM so it won't trigger
 	 * the Stack Error Trap.
@@ -44,6 +42,12 @@ SECTION_FUNC(isr, _isr_wrapper)
 	 */
 	setm	SPLIM
 	nop
+
+	/* ++(_kernel->nested) to be checked by arch_is_in_isr() */
+	inc	__kernel+_kernel_offset_to_nested
+
+	/* Switch to the IRQ stack */
+	mov	__kernel+_kernel_offset_to_irq_stack, w15
 
 	/* Get active IRQ number from the interrupt controller */
 	mov	INTTREG, w0
@@ -66,14 +70,14 @@ SECTION_FUNC(isr, _isr_wrapper)
 
 	/* Apply the bitmask */
 	and	w2, [w3], [w3]
-	
+
 	/* Retrieve the interrupt service routine */
 	mov	__sw_isr_table, w1
 	mov	[w0+w1], w2
 	mov.d	[w2], w0	/* arg in w0, ISR in w2 */
 
 	/* Acknowledge the interrupt */
-	
+
 	/* Call the ISR */
 	call	w2
 
@@ -82,6 +86,7 @@ SECTION_FUNC(isr, _isr_wrapper)
 #endif
 
 	/* --(_kernel->nested) */
+	dec	__kernel+_kernel_offset_to_nested
 
 	cp0	w1
 	bra	nz, exit
@@ -105,7 +110,7 @@ SECTION_FUNC(isr, _isr_wrapper)
 	bra	z, exit
 
 	/* Switch thread */
-	call	_z_pic30_context_switch
+	/*call	_z_pic30_context_switch */
 
 exit:
 #ifdef CONFIG_STACK_SENTINEL

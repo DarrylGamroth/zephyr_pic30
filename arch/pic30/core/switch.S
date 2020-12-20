@@ -21,12 +21,12 @@
 /*
  * Routine to handle context switches
  *
- * This function is directly called either by _isr_wrapper() in case of
- * preemption, or z_pic30_sync_exc() in case of cooperative switching.
+ * This function is directly called either by arch_switch() in case of
+ * in case of cooperative switching.
  */
 
 GTEXT(_z_pic30_arch_switch)
-SECTION_FUNC(text, _z_pic30_arch_switch)
+SECTION_FUNC(TEXT, _z_pic30_arch_switch)
 
 	/*
 	 *  - w0 = new_thread->switch_handle = switch_to thread
@@ -43,7 +43,7 @@ SECTION_FUNC(text, _z_pic30_arch_switch)
 	bset	w2, #7
 	ior	w2, [--w15], w2
 	mov	w2, [w15++]
-	
+
 	z_pic30_enter_exc
 
 	/*
@@ -52,6 +52,9 @@ SECTION_FUNC(text, _z_pic30_arch_switch)
 	 * SPLIM<0> is always 0
 	 */
 	setm	SPLIM
+
+	/* Get old thread from w1 */
+	sub	#___thread_t_switch_handle_OFFSET, w1
 
 	/* Save callee saved registers, including stack pointer */
 	add	#_thread_offset_to_callee_saved, w1
@@ -62,10 +65,10 @@ SECTION_FUNC(text, _z_pic30_arch_switch)
 
 	/* Load callee saved registers, including stack pointer */
 	add	#_thread_offset_to_callee_saved, w0
-	mov.d	[--w0], w14
-	mov.d	[--w0], w12
-	mov.d	[--w0], w10
-	mov.d	[--w0], w8
+	mov.d	[w0++], w8
+	mov.d	[w0++], w10
+	mov.d	[w0++], w12
+	mov.d	[w0++], w14
 
 #ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
 	call	_z_thread_mark_switched_in
@@ -82,7 +85,7 @@ SECTION_FUNC(text, _z_pic30_arch_switch)
  */
 
 GTEXT(z_pic30_sync_exc)
-SECTION_FUNC(text, z_pic30_sync_exc)
+SECTION_FUNC(TEXT, z_pic30_sync_exc)
 	z_pic30_enter_exc
 
 	/* Demux Hard Trap */
@@ -99,7 +102,8 @@ SECTION_FUNC(text, z_pic30_sync_exc)
 #ifdef CONFIG_IRQ_OFFLOAD
 offload:
 	/* ++(_kernel->nested) to be checked by arch_is_in_isr() */
-	inc_nest_counter w0, w1
+	inc	__kernel+_kernel_offset_to_nested, w8
+	inc	[w8], [w8]
 
 	/* Clear SWTRAP flag */
 	bclr	INTCON2, #SWTRAP
@@ -108,7 +112,7 @@ offload:
 	call	_z_irq_do_offload
 
 	/* --(_kernel->nested) */
-	dec_nest_counter w0, w1
+	dec	[w8], [w8]
 	bra	exit
 #endif
 
@@ -124,12 +128,12 @@ invalid:
 	call	_z_pic30_fatal_error
 
 exit:
-	z_pic30_enter_exc
+	z_pic30_exit_exc
 	retfie
 
 #ifdef CONFIG_IRQ_OFFLOAD
 GTEXT(z_pic30_offload)
-SECTION_FUNC(text, z_pic30_offload)
+SECTION_FUNC(TEXT, z_pic30_offload)
 	bset	INTCON2, #SWTRAP
 	return
 #endif

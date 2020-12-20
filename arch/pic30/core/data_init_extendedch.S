@@ -7,13 +7,14 @@
 ;; option is selected.
 ;;
 #include <toolchain.h>
+#include <linker/sections.h>
 #include <autoconf.h>
 #include <arch/cpu.h>
 
 /* exports */
 GTEXT(__data_init_extended)
 
-;; 
+;;
 ;; Process data init template
 ;;
 ;; The template is null-terminated, with records
@@ -26,29 +27,29 @@ GTEXT(__data_init_extended)
 ;;  int  page:9;      /* destination page     */
 ;;  char dat[0];      /* variable length data */
 ;; };
-;; 
+;;
 ;; Registers used:  w0 w1 w2 w3 w4 w5
-;; 
+;;
 ;; Inputs:
 ;;  w0 <- tbloffset of initialization template
 ;;  w1 <- tblpage of initialization template
-;; 
+;;
 ;; Outputs:
 ;;  (none)
 ;;
 ;; Calls:
 ;;  __memcpypd3crt
-;; 
+;;
 ;; for PIC24F devices with extended data memory
 ;;
 
-SECTION_FUNC(init, __data_init_extended)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
 
         ; for all format codes, hi-bit set means there is a DST page at
         ; data[0]
         .equiv   FMT_CLEAR,0    ;  format codes
-        .equiv   FMT_COPY2,1    ; 
-        .equiv   FMT_COPY3,2    ; 
+        .equiv   FMT_COPY2,1    ;
+        .equiv   FMT_COPY3,2    ;
 	.equiv   FMT_CALL, 3
         .equiv   FMT_DUO_COPY3,0x1F ;  copy len instructions to slave
 
@@ -100,7 +101,7 @@ SECTION_FUNC(init, __data_init_extended)
         inc      _DSWPAG
         bset     DSTOFFSET,#15
 8:      dec      LEN,LEN
-        bra gtu, 9b                              ; loop if not done 
+        bra gtu, 9b                              ; loop if not done
         bra      4f
 
         ;; FMT_COPY2, FMT_COPY3
@@ -143,10 +144,10 @@ SECTION_FUNC(init, __data_init_extended)
 ;; This function does not follow the standard C calling convesions
 ;;
 
-SECTION_FUNC(init, __memcpyd3extended)
-1:      
-        btst.c   UPPERBYTE, #13        ; set carry if UPPERBYTE is set      
-        addc     DSTOFFSET, #2, [w15]  
+SECTION_SUBSEC_FUNC(reset,_reset_section,__memcpyd3extended)
+1:
+        btst.c   UPPERBYTE, #13        ; set carry if UPPERBYTE is set
+        addc     DSTOFFSET, #2, [w15]
         bra nc,  2f                    ; this will not cross
 
         ; the destination offset will cross a page, so check each time
@@ -156,7 +157,7 @@ SECTION_FUNC(init, __memcpyd3extended)
         bra nc,  3f
 	inc      _DSWPAG               ; increment write page
 	bset     DSTOFFSET,#15         ; set bit 15
-3:       
+3:
         dec      LEN,LEN               ; num--
         bra z,   4f                    ; br if done
 
@@ -177,9 +178,9 @@ SECTION_FUNC(init, __memcpyd3extended)
         bra nc,  3f
         inc      _DSWPAG
         bset     DSTOFFSET,#15
-3:       
+3:
         dec      LEN,LEN               ; num--
-4:      
+4:
         inc2     TBLOFFSET,TBLOFFSET
         addc     _TBLPAG               ; ZERO must be tied to 0
         cp0      LEN

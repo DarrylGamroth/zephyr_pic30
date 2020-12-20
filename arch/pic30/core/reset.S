@@ -40,9 +40,6 @@ GTEXT(_z_pic30_prep_c)
 GTEXT(_z_interrupt_stacks)
 GTEXT(__data_init_extended)
 
-SECTION_FUNC(reset, reset_handler)
-	goto __reset
-
 ;;
 ;; Initialize stack, PSV, and data
 ;;
@@ -61,23 +58,10 @@ SECTION_FUNC(reset, reset_handler)
 ;;  _z_pic30_prep_c
 ;;
 
-SECTION_FUNC(init, __reset)
-SECTION_FUNC(init, __start)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__reset)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__start)
 
-#ifdef CONFIG_INIT_STACKS
-	/* Pre-populate all bytes in z_interrupt_stacks with 0xAA */
-	mov	_z_interrupt_stacks, w15
-	mov	#0xaaaa, w14
-	repeat	#CONFIG_ISR_STACK_SIZE
-	mov	w14, [w15++]
-#endif
-
-	mov	_z_interrupt_stacks, w15	; initialize stack pointer
-	
-	mov	#CONFIG_ISR_STACK_SIZE-16, w14	; leave some space for traps
-	add	w14, w15, w14
-	mov	w14, SPLIM		; initialize SPLIM
-	nop				; wait 1 cycle
+	mov	#__SP_init, w15		; compiler initialized stack pointer
 
 	mov	#__enable_fixed, w0
 	cp0	w0
@@ -87,6 +71,7 @@ SECTION_FUNC(init, __start)
 
 CORCON_RESET:
 	rcall	__psv_init		; initialize PSV
+
 	mov	#__dinit_tbloffset, w0	; w0,w1 = template
 	mov	#__dinit_tblpage, w1
 	ior	w0,w1,[w15]
@@ -95,17 +80,29 @@ CORCON_RESET:
 	rcall	__data_init_extended	; initialize data
 
 1:
+#ifdef CONFIG_INIT_STACKS
+	/* Pre-populate all bytes in z_interrupt_stacks with 0xAA */
+	mov	#_z_interrupt_stacks, w15
+	mov	#0xaaaa, w14
+	repeat	#CONFIG_ISR_STACK_SIZE/2
+	mov	w14, [w15++]
+#endif
+
+	mov	#_z_interrupt_stacks, w15	; initialize stack pointer
+
+	mov	#CONFIG_ISR_STACK_SIZE/2-16, w14	; leave some space for traps
+	add	w14, w15, w14
+	mov	w14, SPLIM		; initialize SPLIM
+	nop				; wait 1 cycle
+
 	/*
 	 * Jump into C domain. _PrepC zeroes BSS
 	 * and then enters kernel z_cstart
 	 */
-	call	_z_pic30_prep_c
-
-	.pword 0xDA4000			; halt the simulator
-	reset				; reset the processor
+	goto	_z_pic30_prep_c
 
 ;;
-;; Initialize PSV window if _constlen > 0
+;; Initialize PSV window if __const_length > 0
 ;;
 ;; Registers used:  w0
 ;;
@@ -116,7 +113,8 @@ CORCON_RESET:
 ;; Outputs:
 ;;  (none)
 ;;
-SECTION_FUNC(init, __psv_init)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__psv_init)
+#ifdef CONFIG_CPU_DSPIC33C
 	mov	#__const_length, w0
 	cp0	w0			; test length of constants
 	bra	z, 1f			; br if zero
@@ -126,4 +124,17 @@ SECTION_FUNC(init, __psv_init)
 
 1:
 	return				;  and exit
+#else
+	bclr	CORCON, #PSV		; disable PSV (default)
+	mov	#__const_length, w0
+	cp0	w0			; test length of constants
+	bra	z, 1f			; br if zero
+
+	mov	#__const_psvpage, w0
+	mov	w0, PSVPAG		; PSVPAG = psvpage(constants)
+	bset	CORCON, #PSV		; enable PSV (default)
+
+1:
+	return				;  and exit
+#endif
 

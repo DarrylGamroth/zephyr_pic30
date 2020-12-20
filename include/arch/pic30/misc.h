@@ -29,7 +29,7 @@ static inline uint32_t arch_k_cycle_get_32(void)
 
 static ALWAYS_INLINE void arch_nop(void)
 {
-	__asm__ volatile("nop");
+	__asm__ volatile ("nop");
 }
 
 #endif

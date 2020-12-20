@@ -13,4 +13,4 @@
 #include <xc.inc>
 #endif  /* !_ASMLANGUAGE */
 
-#endif /* ZEPHYR_INCLUDE_ARCH_PIC30_CPU_H_ */
+#endif  /* ZEPHYR_INCLUDE_ARCH_PIC30_CPU_H_ */

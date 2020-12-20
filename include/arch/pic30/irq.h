@@ -32,6 +32,7 @@ GTEXT(_arch_irq_is_enabled)
 extern void arch_irq_enable(unsigned int irq);
 extern void arch_irq_disable(unsigned int irq);
 extern int arch_irq_is_enabled(unsigned int irq);
+extern void z_pic30_enter_irq(void);
 
 /* internal routine documented in C file, needed by IRQ_CONNECT() macro */
 extern void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio,
@@ -54,7 +55,7 @@ extern void z_pic30_interrupt_init(void);
  * priority level (discarding what was supplied in the interrupt's priority
  * argument), and will run even if irq_lock() is active. Be careful!
  */
-#define IRQ_ZERO_LATENCY	BIT(0)
+#define IRQ_ZERO_LATENCY        BIT(0)
 #endif
 
 /* All arguments must be computable by the compiler at build time.
@@ -68,16 +69,16 @@ extern void z_pic30_interrupt_init(void);
  * runtime.
  */
 #define ARCH_IRQ_CONNECT(irq_p, priority_p, isr_p, isr_param_p, flags_p) \
-{ \
-	Z_ISR_DECLARE(irq_p, 0, isr_p, isr_param_p); \
-	z_pic30_irq_priority_set(irq_p, priority_p, flags_p); \
-}
+	{								 \
+		Z_ISR_DECLARE(irq_p, 0, isr_p, isr_param_p);		 \
+		z_pic30_irq_priority_set(irq_p, priority_p, flags_p);	 \
+	}
 
-#define ARCH_IRQ_DIRECT_CONNECT(irq_p, priority_p, isr_p, flags_p) \
-{ \
-	Z_ISR_DECLARE(irq_p, ISR_FLAG_DIRECT, isr_p, NULL); \
-	z_pic30_irq_priority_set(irq_p, priority_p, flags_p); \
-}
+#define ARCH_IRQ_DIRECT_CONNECT(irq_p, priority_p, isr_p, flags_p)    \
+	{							      \
+		Z_ISR_DECLARE(irq_p, ISR_FLAG_DIRECT, isr_p, NULL);   \
+		z_pic30_irq_priority_set(irq_p, priority_p, flags_p); \
+	}
 
 #ifdef CONFIG_SYS_POWER_MANAGEMENT
 extern void _arch_isr_direct_pm(void);
@@ -114,15 +115,15 @@ static inline void arch_isr_direct_footer(int maybe_switch)
 	}
 }
 
-#define ARCH_ISR_DIRECT_DECLARE(name) \
-	static inline int name##_body(void); \
+#define ARCH_ISR_DIRECT_DECLARE(name)				   \
+	static inline int name##_body(void);			   \
 	__attribute__ ((__interrupt__, auto_psv))) void name(void) \
-	{ \
-		int check_reschedule; \
-		ISR_DIRECT_HEADER(); \
-		check_reschedule = name##_body(); \
-		ISR_DIRECT_FOOTER(check_reschedule); \
-	} \
+	{							   \
+		int check_reschedule;				   \
+		ISR_DIRECT_HEADER();				   \
+		check_reschedule = name##_body();		   \
+		ISR_DIRECT_FOOTER(check_reschedule);		   \
+	}							   \
 	static inline int name##_body(void)
 
 #if defined(CONFIG_DYNAMIC_DIRECT_INTERRUPTS)
@@ -177,8 +178,8 @@ extern void z_pic30_irq_direct_dynamic_dispatch_no_reschedule(void);
  * @return Interrupt vector assigned to this interrupt.
  */
 #define ARM_IRQ_DIRECT_DYNAMIC_CONNECT(irq_p, priority_p, flags_p, resch) \
-	IRQ_DIRECT_CONNECT(irq_p, priority_p, \
-		CONCAT(z_pic30_irq_direct_dynamic_dispatch_, resch), flags_p)
+	IRQ_DIRECT_CONNECT(irq_p, priority_p,				  \
+			   CONCAT(z_pic30_irq_direct_dynamic_dispatch_, resch), flags_p)
 
 #endif /* CONFIG_DYNAMIC_DIRECT_INTERRUPTS */
 /* Spurious interrupt handler. Throws an error if called */

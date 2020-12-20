@@ -28,6 +28,6 @@ void z_pic30_interrupt_init(void)
 	int irq = 0;
 
 	for (; irq < CONFIG_NUM_IRQS; irq++) {
-        pic30_intc_irq_set_priority(irq, _EXC_IRQ_DEFAULT_PRIO); 
+		pic30_intc_irq_set_priority(irq, _EXC_IRQ_DEFAULT_PRIO);
 	}
 }

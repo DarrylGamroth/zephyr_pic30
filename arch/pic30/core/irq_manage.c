@@ -22,20 +22,43 @@ void z_pic30_fatal_error(unsigned int reason, const z_arch_esf_t *esf);
 
 void arch_irq_enable(unsigned int irq)
 {
-    pic30_intc_irq_enable(irq);
+	pic30_intc_irq_enable(irq);
 }
 
 void arch_irq_disable(unsigned int irq)
 {
-    pic30_intc_irq_disable(irq);
+	pic30_intc_irq_disable(irq);
 }
 
 int arch_irq_is_enabled(unsigned int irq)
 {
-    return pic30_intc_irq_is_enabled(irq);
+	return pic30_intc_irq_is_enabled(irq);
 }
 
-void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio, uint32_t flags)
+void z_pic30_enter_irq(void)
+{
+	struct _isr_table_entry *ite;
+	unsigned int irq;
+
+	_current_cpu->nested++;
+
+	/* Get the actual interrupt source from the interrupt controller */
+	irq = pic30_intc_get_active();
+
+	/* Acnowledge the interrupt */
+	pic30_intc_irq_pending_clear(irq);
+
+	ite = &_sw_isr_table[irq];
+	ite->isr(ite->arg);
+
+	_current_cpu->nested--;
+#ifdef CONFIG_STACK_SENTINEL
+	z_check_stack_sentinel();
+#endif
+}
+
+void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio,
+		uint32_t flags)
 {
 #if defined(CONFIG_ZERO_LATENCY_IRQS)
 	/* If we have zero latency interrupts, those interrupts will
@@ -53,7 +76,7 @@ void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio, uint32_t flag
 	__ASSERT(prio < CONFIG_NUM_IRQ_PRIO_LEVELS,
 		 "invalid priority %d for irq %d", prio, irq);
 
-    pic30_intc_irq_set_priority(irq, prio);
+	pic30_intc_irq_set_priority(irq, prio);
 }
 
 #ifdef CONFIG_DYNAMIC_INTERRUPTS
