@@ -154,7 +154,7 @@ SECTIONS
 
     #include <linker/common-noinit.ld>
 
-    SECTION_DATA_PROLOGUE(.data,,)
+    SECTION_DATA_PROLOGUE(_DATA_SECTION_NAME,,)
     {
         SYMBOL(__data_ram_start) = .;
         *(.data)
@@ -168,7 +168,7 @@ SECTIONS
 
     } GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
-    SYMBOL(__data_rom_start) = LOADADDR(.data);
+    SYMBOL(__data_rom_start) = LOADADDR(_DATA_SECTION_NAME);
 
     #include <linker/common-ram.ld>
 
