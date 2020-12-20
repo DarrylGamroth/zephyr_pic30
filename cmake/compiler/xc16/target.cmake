@@ -37,10 +37,15 @@ list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/h")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/generic/inc")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33C/h")
 list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33C/inc")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33E/h")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33E/inc")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33F/h")
+list(APPEND NOSTDINC "${TOOLCHAIN_HOME}/support/dsPIC33F/inc")
 
-list(APPEND TOOLCHAIN_C_FLAGS -mcpu=${CONFIG_SOC_PART_NUMBER} -save-temps)
+list(APPEND TOOLCHAIN_C_FLAGS
+  -mcpu=${CONFIG_SOC_PART_NUMBER}
+  -save-temps)
 list(APPEND TOOLCHAIN_LD_FLAGS
-	-Wl,--handles
 	-Wl,--no-isr
 	-Wl,--no-ivt
 	-Wl,--no-smart-io
@@ -65,7 +70,7 @@ endforeach()
 #
 # Appending onto any existing values lets users specify
 # toolchain-specific flags at generation time.
-list(APPEND CMAKE_REQUIRED_FLAGS 
+list(APPEND CMAKE_REQUIRED_FLAGS
   -nostartfiles
   -nostdlib
   -L${TOOLCHAIN_HOME}/lib
