@@ -1188,7 +1188,7 @@ static char *encode_float(double value,
 	}
 
 	fract += ltemp;
-	if ((fract >> 32) & (0x0FU << 28)) {
+	if ((fract >> 32) & (0x0FUL << 28)) {
 		_ldiv5(&fract);
 		_rlrshift(&fract);
 		decexp++;
