@@ -19,7 +19,7 @@ struct npcx_pinctrl_config {
 
 /* Default io list which default functionality are not IOs */
 #define DT_DRV_COMPAT nuvoton_npcx_pinctrl_def
-static const struct npcx_alt def_alts[] = DT_NPCX_ALT_ITEMS_LIST(0);
+static const struct npcx_alt def_alts[] = NPCX_DT_ALT_ITEMS_LIST(0);
 
 static const struct npcx_pinctrl_config npcx_pinctrl_cfg = {
 	.base = DT_REG_ADDR(DT_NODELABEL(scfg)),
@@ -81,9 +81,9 @@ static int npcx_pinctrl_init(const struct device *dev)
 	return 0;
 }
 
-DEVICE_AND_API_INIT(npcx_pinctrl,
-		    DT_LABEL(DT_NODELABEL(scfg)),
+DEVICE_DT_DEFINE(DT_NODELABEL(scfg),
 		    &npcx_pinctrl_init,
+		    device_pm_control_nop,
 		    NULL, &npcx_pinctrl_cfg,
 		    PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT,
 		    NULL);

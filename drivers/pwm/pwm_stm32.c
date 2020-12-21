@@ -23,6 +23,11 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(pwm_stm32, CONFIG_PWM_LOG_LEVEL);
 
+/* L0 series MCUs only have 16-bit timers and don't have below macro defined */
+#ifndef IS_TIM_32B_COUNTER_INSTANCE
+#define IS_TIM_32B_COUNTER_INSTANCE(INSTANCE) (0)
+#endif
+
 /** PWM data. */
 struct pwm_stm32_data {
 	/** Timer clock (Hz). */
@@ -233,7 +238,6 @@ static int pwm_stm32_pin_set(const struct device *dev, uint32_t pwm,
 		oc_init.OCState = LL_TIM_OCSTATE_ENABLE;
 		oc_init.CompareValue = pulse_cycles;
 		oc_init.OCPolarity = get_polarity(flags);
-		oc_init.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
 
 		if (LL_TIM_OC_Init(cfg->timer, channel, &oc_init) != SUCCESS) {
 			LOG_ERR("Could not initialize timer channel output");
@@ -249,8 +253,6 @@ static int pwm_stm32_pin_set(const struct device *dev, uint32_t pwm,
 		set_timer_compare[pwm - 1u](cfg->timer, pulse_cycles);
 		LL_TIM_SetAutoReload(cfg->timer, period_cycles - 1u);
 	}
-
-
 
 	return 0;
 }
@@ -313,16 +315,18 @@ static int pwm_stm32_init(const struct device *dev)
 	init.CounterMode = LL_TIM_COUNTERMODE_UP;
 	init.Autoreload = 0u;
 	init.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-	init.RepetitionCounter = 0u;
+
 	if (LL_TIM_Init(cfg->timer, &init) != SUCCESS) {
 		LOG_ERR("Could not initialize timer");
 		return -EIO;
 	}
 
+#ifndef CONFIG_SOC_SERIES_STM32L0X
 	/* enable outputs and counter */
 	if (IS_TIM_BREAK_INSTANCE(cfg->timer)) {
 		LL_TIM_EnableAllOutputs(cfg->timer);
 	}
+#endif
 
 	LL_TIM_EnableCounter(cfg->timer);
 
@@ -350,8 +354,8 @@ static int pwm_stm32_init(const struct device *dev)
 		.pinctrl_len = ARRAY_SIZE(pwm_pins_##index),                   \
 	};                                                                     \
 									       \
-	DEVICE_AND_API_INIT(pwm_stm32_##index, DT_INST_LABEL(index),           \
-			    &pwm_stm32_init, &pwm_stm32_data_##index,          \
+	DEVICE_DT_INST_DEFINE(index, &pwm_stm32_init, device_pm_control_nop,   \
+			    &pwm_stm32_data_##index,                           \
 			    &pwm_stm32_config_##index, POST_KERNEL,            \
 			    CONFIG_KERNEL_INIT_PRIORITY_DEVICE,                \
 			    &pwm_stm32_driver_api);

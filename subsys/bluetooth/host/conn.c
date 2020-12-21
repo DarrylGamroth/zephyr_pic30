@@ -1890,6 +1890,8 @@ void bt_conn_unref(struct bt_conn *conn)
 	BT_DBG("handle %u ref %u -> %u", conn->handle, old,
 	       atomic_get(&conn->ref));
 
+	__ASSERT(old > 0, "Conn reference counter is 0");
+
 	if (IS_ENABLED(CONFIG_BT_PERIPHERAL) &&
 	    atomic_get(&conn->ref) == 0) {
 		bt_le_adv_resume();
@@ -1972,6 +1974,60 @@ int bt_conn_get_remote_info(struct bt_conn *conn,
 	default:
 		return -EINVAL;
 	}
+}
+
+/* Read Transmit Power Level HCI command */
+static int bt_conn_get_tx_power_level(struct bt_conn *conn, uint8_t type,
+				      int8_t *tx_power_level)
+{
+	int err;
+	struct bt_hci_rp_read_tx_power_level *rp;
+	struct net_buf *rsp;
+	struct bt_hci_cp_read_tx_power_level *cp;
+	struct net_buf *buf;
+
+	buf = bt_hci_cmd_create(BT_HCI_OP_READ_TX_POWER_LEVEL, sizeof(*cp));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+
+	cp = net_buf_add(buf, sizeof(*cp));
+	cp->type = type;
+	cp->handle = sys_cpu_to_le16(conn->handle);
+
+	err = bt_hci_cmd_send_sync(BT_HCI_OP_READ_TX_POWER_LEVEL, buf, &rsp);
+	if (err) {
+		return err;
+	}
+
+	rp = (void *) rsp->data;
+	*tx_power_level = rp->tx_power_level;
+	net_buf_unref(rsp);
+
+	return 0;
+}
+
+int bt_conn_le_get_tx_power_level(struct bt_conn *conn,
+				  struct bt_conn_le_tx_power *tx_power_level)
+{
+	int err;
+
+	if (tx_power_level->phy != 0) {
+		/* Extend the implementation when LE Enhanced Read Transmit
+		 * Power Level HCI command is available for use.
+		 */
+		return -ENOTSUP;
+	}
+
+	err = bt_conn_get_tx_power_level(conn, BT_TX_POWER_LEVEL_CURRENT,
+					 &tx_power_level->current_level);
+	if (err) {
+		return err;
+	}
+
+	err = bt_conn_get_tx_power_level(conn, BT_TX_POWER_LEVEL_MAX,
+					 &tx_power_level->max_level);
+	return err;
 }
 
 static int conn_disconnect(struct bt_conn *conn, uint8_t reason)
@@ -2631,30 +2687,31 @@ int bt_conn_auth_pairing_confirm(struct bt_conn *conn)
 
 uint8_t bt_conn_index(struct bt_conn *conn)
 {
-	uint8_t index;
+	ptrdiff_t index;
 
 	switch (conn->type) {
 #if defined(CONFIG_BT_ISO)
 	case BT_CONN_TYPE_ISO:
 		index = conn - iso_conns;
-		__ASSERT(index < CONFIG_BT_MAX_ISO_CONN,
+		__ASSERT(0 <= index && index < ARRAY_SIZE(iso_conns),
 			"Invalid bt_conn pointer");
 		break;
 #endif
 #if defined(CONFIG_BT_BREDR)
 	case BT_CONN_TYPE_SCO:
 		index = conn - sco_conns;
-		__ASSERT(index < CONFIG_BT_MAX_SCO_CONN,
+		__ASSERT(0 <= index && index < ARRAY_SIZE(sco_conns),
 			"Invalid bt_conn pointer");
 		break;
 #endif
 	default:
 		index = conn - acl_conns;
-		__ASSERT(index < CONFIG_BT_MAX_CONN, "Invalid bt_conn pointer");
+		__ASSERT(0 <= index && index < ARRAY_SIZE(acl_conns),
+			 "Invalid bt_conn pointer");
 		break;
 	}
 
-	return index;
+	return (uint8_t)index;
 }
 
 struct bt_conn *bt_conn_lookup_index(uint8_t index)

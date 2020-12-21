@@ -197,19 +197,19 @@ static int pwm_npcx_init(const struct device *dev)
 
 #define NPCX_PWM_INIT(inst)                                                    \
 	static const struct npcx_alt pwm_alts##inst[] =			       \
-					DT_NPCX_ALT_ITEMS_LIST(inst);          \
+					NPCX_DT_ALT_ITEMS_LIST(inst);          \
 									       \
 	static const struct pwm_npcx_config pwm_npcx_cfg_##inst = {            \
 		.base = DT_INST_REG_ADDR(inst),                                \
-		.clk_cfg = DT_NPCX_CLK_CFG_ITEM(inst),                         \
+		.clk_cfg = NPCX_DT_CLK_CFG_ITEM(inst),                         \
 		.alts_size = ARRAY_SIZE(pwm_alts##inst),                       \
 		.alts_list = pwm_alts##inst,                                   \
 	};                                                                     \
 									       \
 	static struct pwm_npcx_data pwm_npcx_data_##inst;                      \
 									       \
-	DEVICE_AND_API_INIT(pwm_npcx_##inst, DT_INST_LABEL(inst),              \
-			    &pwm_npcx_init,                                    \
+	DEVICE_DT_INST_DEFINE(inst,					       \
+			    &pwm_npcx_init, device_pm_control_nop,             \
 			    &pwm_npcx_data_##inst, &pwm_npcx_cfg_##inst,       \
 			    PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,  \
 			    &pwm_npcx_driver_api);
