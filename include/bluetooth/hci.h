@@ -185,6 +185,10 @@ struct bt_hci_cmd_hdr {
 						BT_LE_FEAT_BIT_EXT_ADV)
 #define BT_FEAT_LE_EXT_PER_ADV(feat)            BT_LE_FEAT_TEST(feat, \
 						BT_LE_FEAT_BIT_PER_ADV)
+#define BT_FEAT_LE_CONNECTIONLESS_CTE_TX(feat)  BT_LE_FEAT_TEST(feat, \
+						BT_LE_FEAT_BIT_CONNECTIONLESS_CTE_TX)
+#define BT_FEAT_LE_ANT_SWITCH_TX_AOD(feat)	BT_LE_FEAT_TEST(feat, \
+						BT_LE_FEAT_BIT_ANT_SWITCH_TX_AOD)
 #define BT_FEAT_LE_PAST_SEND(feat)              BT_LE_FEAT_TEST(feat, \
 						BT_LE_FEAT_BIT_PAST_SEND)
 #define BT_FEAT_LE_PAST_RECV(feat)              BT_LE_FEAT_TEST(feat, \
@@ -2160,7 +2164,7 @@ struct bt_hci_evt_le_conn_update_complete {
 	uint16_t supv_timeout;
 } __packed;
 
-#define BT_HCI_EV_LE_REMOTE_FEAT_COMPLETE       0x04
+#define BT_HCI_EVT_LE_REMOTE_FEAT_COMPLETE      0x04
 struct bt_hci_evt_le_remote_feat_complete {
 	uint8_t  status;
 	uint16_t handle;

@@ -554,14 +554,13 @@ class BinaryHandler(Handler):
                 t.join()
             proc.wait()
             self.returncode = proc.returncode
+            self.try_kill_process_by_pid()
 
         handler_time = time.time() - start_time
 
         if self.coverage:
             subprocess.call(["GCOV_PREFIX=" + self.build_dir,
                              "gcov", self.sourcedir, "-b", "-s", self.build_dir], shell=True)
-
-        self.try_kill_process_by_pid()
 
         # FIXME: This is needed when killing the simulator, the console is
         # garbled and needs to be reset. Did not find a better way to do that.
@@ -2580,7 +2579,7 @@ class TestSuite(DisablePyTestCollectionMixin):
 
     def check_zephyr_version(self):
         try:
-            subproc = subprocess.run(["git", "describe"],
+            subproc = subprocess.run(["git", "describe", "--abbrev=12"],
                                      stdout=subprocess.PIPE,
                                      universal_newlines=True,
                                      cwd=ZEPHYR_BASE)

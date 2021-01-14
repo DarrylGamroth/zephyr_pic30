@@ -318,6 +318,27 @@
 #define DT_PARENT(node_id) UTIL_CAT(node_id, _PARENT)
 
 /**
+ * @brief Get a node identifier for a grandparent node
+ *
+ * Example devicetree fragment:
+ *
+ *     gparent: grandparent-node {
+ *             parent: parent-node {
+ *                     child: child-node { ... }
+ *             };
+ *     };
+ *
+ * The following are equivalent ways to get the same node identifier:
+ *
+ *     DT_GPARENT(DT_NODELABEL(child))
+ *     DT_PARENT(DT_PARENT(DT_NODELABEL(child))
+ *
+ * @param node_id node identifier
+ * @return a node identifier for the node's parent's parent
+ */
+#define DT_GPARENT(node_id) DT_PARENT(DT_PARENT(node_id))
+
+/**
  * @brief Get a node identifier for a child node
  *
  * Example devicetree fragment:
@@ -420,6 +441,24 @@
  * @return the property's length
  */
 #define DT_PROP_LEN(node_id, prop) DT_PROP(node_id, prop##_LEN)
+
+/**
+ * @brief Like DT_PROP_LEN(), but with a fallback to default_value
+ *
+ * If the property is defined (as determined by DT_NODE_HAS_PROP()),
+ * this expands to DT_PROP_LEN(node_id, prop). The default_value
+ * parameter is not expanded in this case.
+ *
+ * Otherwise, this expands to default_value.
+ *
+ * @param node_id node identifier
+ * @param prop a lowercase-and-underscores property with a logical length
+ * @param default_value a fallback value to expand to
+ * @return the property's length or the given default value
+ */
+#define DT_PROP_LEN_OR(node_id, prop, default_value) \
+	COND_CODE_1(DT_NODE_HAS_PROP(node_id, prop), \
+		    (DT_PROP_LEN(node_id, prop)), (default_value))
 
 /**
  * @brief Is index "idx" valid for an array type property?
