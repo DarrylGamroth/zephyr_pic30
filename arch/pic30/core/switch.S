@@ -49,7 +49,6 @@ SECTION_FUNC(TEXT, _z_pic30_arch_switch)
 	/*
 	 * Set the SPLIM register to the top of RAM so it won't trigger
 	 * the Stack Error Trap.
-	 * SPLIM<0> is always 0
 	 */
 	setm	SPLIM
 
@@ -84,8 +83,8 @@ SECTION_FUNC(TEXT, _z_pic30_arch_switch)
  * - IRQ offloading
  */
 
-GTEXT(z_pic30_sync_exc)
-SECTION_FUNC(TEXT, z_pic30_sync_exc)
+GTEXT(_z_pic30_sync_exc)
+SECTION_FUNC(TEXT, _z_pic30_sync_exc)
 	z_pic30_enter_exc
 
 	/* Demux Hard Trap */
@@ -95,15 +94,14 @@ SECTION_FUNC(TEXT, z_pic30_sync_exc)
 #endif
 #ifdef CONIFG_ECCDBE
 	cp	INTCON4, #ECCDBE
-	bra	eccdbe
+	bra	nz, eccdbe
 #endif
 	bra	invalid
 
 #ifdef CONFIG_IRQ_OFFLOAD
 offload:
 	/* ++(_kernel->nested) to be checked by arch_is_in_isr() */
-	inc	__kernel+_kernel_offset_to_nested, w8
-	inc	[w8], [w8]
+	inc	__kernel+_kernel_offset_to_nested
 
 	/* Clear SWTRAP flag */
 	bclr	INTCON2, #SWTRAP
@@ -112,7 +110,7 @@ offload:
 	call	_z_irq_do_offload
 
 	/* --(_kernel->nested) */
-	dec	[w8], [w8]
+	dec	__kernel+_kernel_offset_to_nested
 	bra	exit
 #endif
 
@@ -132,8 +130,8 @@ exit:
 	retfie
 
 #ifdef CONFIG_IRQ_OFFLOAD
-GTEXT(z_pic30_offload)
-SECTION_FUNC(TEXT, z_pic30_offload)
+GTEXT(_z_pic30_offload)
+SECTION_FUNC(TEXT, _z_pic30_offload)
 	bset	INTCON2, #SWTRAP
 	return
 #endif

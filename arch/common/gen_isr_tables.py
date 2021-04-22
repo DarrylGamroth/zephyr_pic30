@@ -163,6 +163,10 @@ def write_source_file(fp, vt, swt, intlist, syms):
     if not swt:
         return
 
+    dynamic_interrupts = syms.get("CONFIG_DYNAMIC_INTERRUPTS")
+
+    if dynamic_interrupts is None or 0 == dynamic_interrupts:
+        fp.write("const ")
     fp.write("struct _isr_table_entry __sw_isr_table _sw_isr_table[%d] = {\n"
             % nv)
 

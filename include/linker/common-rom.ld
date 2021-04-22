@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
-	SECTION_PROLOGUE(initlevel,,)
+	SECTION_RODATA_PROLOGUE(initlevel,,)
 	{
 		/*
 		 * link in initialization objects for all objects that are
@@ -18,7 +18,7 @@
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
 #if defined(CONFIG_GEN_SW_ISR_TABLE) && !defined(CONFIG_DYNAMIC_INTERRUPTS)
-	SECTION_PROLOGUE(sw_isr_table,,)
+	SECTION_RODATA_PROLOGUE(sw_isr_table,,)
 	{
 		/*
 		 * Some arch requires an entry to be aligned to arch
@@ -31,14 +31,14 @@
 #endif
 
 	/* verify we don't have rogue .init_<something> initlevel sections */
-	SECTION_PROLOGUE(initlevel_error,,)
+	SECTION_RODATA_PROLOGUE(initlevel_error,,)
 	{
 		KEEP(*(SORT(.init_[_A-Z0-9]*)))
 	}
 	ASSERT(SIZEOF(initlevel_error) == 0, "Undefined initialization levels used.")
 
 #ifdef CONFIG_CPLUSPLUS
-	SECTION_PROLOGUE(_CTOR_SECTION_NAME,,)
+	SECTION_RODATA_PROLOGUE(_CTOR_SECTION_NAME,,)
 	{
 		/*
 		 * The compiler fills the constructor pointers table below,
@@ -64,7 +64,7 @@
 #endif
 	} GROUP_LINK_IN(ROMABLE_REGION)
 
-	SECTION_PROLOGUE(init_array,,)
+	SECTION_RODATA_PROLOGUE(init_array,,)
 	{
 		. = ALIGN(4);
 		SYMBOL(__init_array_start) = .;
@@ -79,7 +79,7 @@
 	Z_ITERABLE_SECTION_ROM(z_object_assignment, 4)
 #endif
 
-	SECTION_DATA_PROLOGUE(app_shmem_regions,,)
+	SECTION_RODATA_PROLOGUE(app_shmem_regions,,)
 	{
 		SYMBOL(__app_shmem_regions_start) = .;
 		KEEP(*(SORT(.app_regions.*)));
@@ -126,7 +126,7 @@
 #endif
 
 #if defined(CONFIG_EMUL)
-	SECTION_DATA_PROLOGUE(emulators_section,,)
+	SECTION_RODATA_PROLOGUE(emulators_section,,)
 	{
 		SYMBOL(__emul_list_start) = .;
 		KEEP(*(SORT_BY_NAME(".emulators")));
@@ -139,7 +139,7 @@
 #endif
 
 #if defined(CONFIG_PCIE)
-	SECTION_DATA_PROLOGUE(irq_alloc,,)
+	SECTION_RODATA_PROLOGUE(irq_alloc,,)
 	{
 		__irq_alloc_start = .;
 		KEEP(*(SORT_BY_NAME("._irq_alloc*")));
@@ -147,34 +147,12 @@
 	} GROUP_LINK_IN(ROMABLE_REGION)
 #endif /* CONFIG_PCIE */
 
-	SECTION_DATA_PROLOGUE(log_const_sections,,)
-	{
-		SYMBOL(__log_const_start) = .;
-		KEEP(*(SORT(.log_const_*)));
-		SYMBOL(__log_const_end) = .;
-	} GROUP_LINK_IN(ROMABLE_REGION)
-
-	SECTION_DATA_PROLOGUE(log_backends_sections,,)
-	{
-		SYMBOL(__log_backends_start) = .;
-		KEEP(*("._log_backend.*"));
-		SYMBOL(__log_backends_end) = .;
-	} GROUP_LINK_IN(ROMABLE_REGION)
+	Z_ITERABLE_SECTION_ROM(log_const, 4)
+	Z_ITERABLE_SECTION_ROM(log_backends, 4)
 
 	Z_ITERABLE_SECTION_ROM(shell, 4)
+	Z_ITERABLE_SECTION_ROM(shell_root_cmds, 4)
 
-	SECTION_DATA_PROLOGUE(shell_root_cmds_sections,,)
-	{
-		SYMBOL(__shell_root_cmds_start) = .;
-		KEEP(*(SORT(.shell_root_cmd_*)));
-		SYMBOL(__shell_root_cmds_end) = .;
-	} GROUP_LINK_IN(ROMABLE_REGION)
-
-	SECTION_DATA_PROLOGUE(font_entry_sections,,)
-	{
-		SYMBOL(__font_entry_start) = .;
-		KEEP(*(SORT_BY_NAME("._cfb_font.*")))
-		SYMBOL(__font_entry_end) = .;
-	} GROUP_LINK_IN(ROMABLE_REGION)
+	Z_ITERABLE_SECTION_ROM(font_entry, 4)
 
 	Z_ITERABLE_SECTION_ROM(tracing_backend, 4)

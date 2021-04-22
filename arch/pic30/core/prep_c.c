@@ -29,11 +29,6 @@ extern FUNC_NORETURN void z_cstart(void);
 void z_pic30_prep_c(void)
 {
 	/* Zeroing and data section copy are handled by the reset handler */
-#if 0
-	z_bss_zero();
-	z_data_copy();
-#endif
-	z_pic30_interrupt_init();
 	z_cstart();
 
 	CODE_UNREACHABLE;

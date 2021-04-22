@@ -307,19 +307,15 @@ static inline char *log_strdup(const char *str)
 
 #define _LOG_MODULE_CONST_DATA_CREATE(_name, _level)			     \
 	IF_ENABLED(LOG_IN_CPLUSPLUS, (extern))				     \
-	const struct log_source_const_data LOG_ITEM_CONST_DATA(_name)	     \
-	__attribute__ ((section("." STRINGIFY(LOG_ITEM_CONST_DATA(_name))))) \
-	__attribute__((used)) = {					     \
+	const Z_STRUCT_SECTION_ITERABLE(log_source_const_data,		     \
+			LOG_ITEM_CONST_DATA(_name)) = {			     \
 		.name = STRINGIFY(_name),				     \
 		.level = _level						     \
 	}
 
 #define _LOG_MODULE_DYNAMIC_DATA_CREATE(_name)				\
-	struct log_source_dynamic_data LOG_ITEM_DYNAMIC_DATA(_name)	\
-	__attribute__ ((section("." STRINGIFY(				\
-				     LOG_ITEM_DYNAMIC_DATA(_name))))	\
-				     )					\
-	__attribute__((used))
+	Z_STRUCT_SECTION_ITERABLE(log_source_dynamic_data,		\
+			LOG_ITEM_DYNAMIC_DATA(_name))
 
 #define _LOG_MODULE_DYNAMIC_DATA_COND_CREATE(_name)		\
 	IF_ENABLED(CONFIG_LOG_RUNTIME_FILTERING,		\

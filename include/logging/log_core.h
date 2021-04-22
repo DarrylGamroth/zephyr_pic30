@@ -418,8 +418,8 @@ static inline char z_log_minimal_level_to_char(int level)
  */
 #define LOG_LEVEL_INTERNAL_RAW_STRING LOG_LEVEL_NONE
 
-extern struct log_source_const_data __log_const_start[];
-extern struct log_source_const_data __log_const_end[];
+extern struct log_source_const_data __log_const_list_start[];
+extern struct log_source_const_data __log_const_list_end[];
 
 /** @brief Enum with possible actions for strdup operation. */
 enum log_strdup_action {
@@ -435,7 +435,7 @@ enum log_strdup_action {
  */
 static inline const char *log_name_get(uint32_t source_id)
 {
-	return __log_const_start[source_id].name;
+	return __log_const_list_start[source_id].name;
 }
 
 /** @brief Get compiled level of the log source.
@@ -445,7 +445,7 @@ static inline const char *log_name_get(uint32_t source_id)
  */
 static inline uint8_t log_compiled_level_get(uint32_t source_id)
 {
-	return __log_const_start[source_id].level;
+	return __log_const_list_start[source_id].level;
 }
 
 /** @brief Get index of the log source based on the address of the constant data
@@ -458,27 +458,18 @@ static inline uint8_t log_compiled_level_get(uint32_t source_id)
 static inline uint32_t log_const_source_id(
 				const struct log_source_const_data *data)
 {
-	return ((uint8_t *)data - (uint8_t *)__log_const_start)/
+	return ((uint8_t *)data - (uint8_t *)__log_const_list_start)/
 			sizeof(struct log_source_const_data);
 }
 
 /** @brief Get number of registered sources. */
 static inline uint32_t log_sources_count(void)
 {
-	return log_const_source_id(__log_const_end);
+	return log_const_source_id(__log_const_list_end);
 }
 
-extern struct log_source_dynamic_data __log_dynamic_start[];
-extern struct log_source_dynamic_data __log_dynamic_end[];
-
-/** @brief Creates name of variable and section for runtime log data.
- *
- *  @param _name Name.
- */
-#define LOG_ITEM_DYNAMIC_DATA(_name) UTIL_CAT(log_dynamic_, _name)
-
-#define LOG_INSTANCE_DYNAMIC_DATA(_module_name, _inst) \
-	LOG_ITEM_DYNAMIC_DATA(LOG_INSTANCE_FULL_NAME(_module_name, _inst))
+extern struct log_source_dynamic_data __log_dynamic_list_start[];
+extern struct log_source_dynamic_data __log_dynamic_list_end[];
 
 /** @brief Get pointer to the filter set of the log source.
  *
@@ -488,7 +479,7 @@ extern struct log_source_dynamic_data __log_dynamic_end[];
  */
 static inline uint32_t *log_dynamic_filters_get(uint32_t source_id)
 {
-	return &__log_dynamic_start[source_id].filters;
+	return &__log_dynamic_list_start[source_id].filters;
 }
 
 /** @brief Get index of the log source based on the address of the dynamic data
@@ -500,7 +491,7 @@ static inline uint32_t *log_dynamic_filters_get(uint32_t source_id)
  */
 static inline uint32_t log_dynamic_source_id(struct log_source_dynamic_data *data)
 {
-	return ((uint8_t *)data - (uint8_t *)__log_dynamic_start)/
+	return ((uint8_t *)data - (uint8_t *)__log_dynamic_list_start)/
 			sizeof(struct log_source_dynamic_data);
 }
 

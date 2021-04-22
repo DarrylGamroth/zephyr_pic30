@@ -38,7 +38,7 @@ GTEXT(__start)
 /* imports */
 GTEXT(_z_pic30_prep_c)
 GTEXT(_z_interrupt_stacks)
-GTEXT(__data_init_extended)
+GTEXT(__data_init)
 
 ;;
 ;; Initialize stack, PSV, and data
@@ -63,6 +63,7 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__start)
 
 	mov	#__SP_init, w15		; compiler initialized stack pointer
 
+#if defined(CONFIG_PIC30_DSP)
 	mov	#__enable_fixed, w0
 	cp0	w0
 	bra	z, CORCON_RESET
@@ -70,6 +71,8 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__start)
 	mov	w0,CORCON		; enable super saturation and clear IF
 
 CORCON_RESET:
+#endif /* CONFIG_PIC30_DSP */
+
 	rcall	__psv_init		; initialize PSV
 
 	mov	#__dinit_tbloffset, w0	; w0,w1 = template
@@ -77,7 +80,7 @@ CORCON_RESET:
 	ior	w0,w1,[w15]
 	bra	eq, 1f			; skip if no init table
 
-	rcall	__data_init_extended	; initialize data
+	rcall	__data_init		; initialize data
 
 1:
 #ifdef CONFIG_INIT_STACKS
@@ -114,16 +117,13 @@ CORCON_RESET:
 ;;  (none)
 ;;
 SECTION_SUBSEC_FUNC(reset,_reset_section,__psv_init)
-#ifdef CONFIG_CPU_DSPIC33C
+#ifdef CONFIG_PIC30_EDS
 	mov	#__const_length, w0
 	cp0	w0			; test length of constants
 	bra	z, 1f			; br if zero
 
 	mov	#__const_psvpage, w0
 	mov	w0, DSRPAG		; DSRPAG = psvpage(constants)
-
-1:
-	return				;  and exit
 #else
 	bclr	CORCON, #PSV		; disable PSV (default)
 	mov	#__const_length, w0
@@ -133,8 +133,8 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__psv_init)
 	mov	#__const_psvpage, w0
 	mov	w0, PSVPAG		; PSVPAG = psvpage(constants)
 	bset	CORCON, #PSV		; enable PSV (default)
+#endif
 
 1:
 	return				;  and exit
-#endif
 

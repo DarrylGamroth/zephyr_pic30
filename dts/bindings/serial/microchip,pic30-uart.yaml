@@ -1,9 +1,0 @@
-description: Microchip pic30 UART
-
-compatible: "microchip,pic30-uart"
-
-include: uart-controller.yaml
-
-properties:
-    reg:
-      required: true

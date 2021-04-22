@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <pic30/dspic33c.dtsi>
+#include "skeleton.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 
 / {
@@ -30,17 +30,143 @@
 	};
 
 	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		interrupt-parent = <&intc>;
+		ranges;
+
+		intc: interrupt-controller@800  {
+			compatible = "microchip,pic30-intc";
+			reg = <0x800 0xc8>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
 		timer1: timer@100 {
 			compatible = "microchip,pic30-timer1";
-			reg = <0x100 0x008>;
-			interrupts = <9 1>;
-			label = "TIMER_1";
+			reg = <0x100 0x06>;
+			interrupts = <1 1>;
+			label = "TIMER1";
+		};
+
+		porta: gpio@e00 {
+			compatible = "microchip,pic30-gpio-edge";
+			reg = <0xe00 0x16>;
+			interrupts = <2 1>;
+			label = "PORTA";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		portb: gpio@e1c {
+			compatible = "microchip,pic30-gpio-edge";
+			reg = <0xe1c 0x16>;
+			interrupts = <3 1>;
+			label = "PORTB";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		portc: gpio@e38 {
+			compatible = "microchip,pic30-gpio-edge";
+			reg = <0xe38 0x16>;
+			interrupts = <19 1>;
+			label = "PORTC";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		portd: gpio@e54 {
+			compatible = "microchip,pic30-gpio-edge";
+			reg = <0xe54 0x16>;
+			interrupts = <75 1>;
+			label = "PORTD";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		porte: gpio@e70 {
+			compatible = "microchip,pic30-gpio-edge";
+			reg = <0xe70 0x16>;
+			interrupts = <76 1>;
+			label = "PORTE";
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+
+		uart1: uart@238 {
+			compatible = "microchip,pic30-mpuart";
+			reg = <0x238 0x24>;
+			interrupts = <11 1>, <12 1>, <49 1>, <189 1>;
+			interrupt-names = "rx", "tx", "error", "event";
+			status = "disabled";
+			label = "UART1";
+		};
+
+		uart2: uart@260 {
+			compatible = "microchip,pic30-mpuart";
+			reg = <0x260 0x24>;
+			interrupts = <27 1>, <28 1>, <50 1>, <190 1>;
+			interrupt-names = "rx", "tx", "error", "event";
+			status = "disabled";
+			label = "UART2";
+		};
+
+		uart3: uart@f00 {
+			compatible = "microchip,pic30-mpuart";
+			reg = <0xf00 0x24>;
+			interrupts = <57 1>, <58 1>, <56 1>, <191 1>;
+			interrupt-names = "rx", "tx", "error", "event";
+			status = "disabled";
+			label = "UART3";
+		};
+
+		spi1: spi@2ac {
+			compatible = "microchip,pic30-spi-audio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x2ac 0x1a>;
+			interrupts = <9 1>, <10 1>, <126 1>;
+			interrupt-names = "rx", "tx", "error";
+			status = "disabled";
+			label = "SPI1";
+		};
+
+		spi2: spi@2c8 {
+			compatible = "microchip,pic30-spi-audio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x2c8 0x1a>;
+			interrupts = <9 1>, <10 1>, <127 1>;
+			interrupt-names = "rx", "tx", "error";
+			status = "disabled";
+			label = "SPI2";
+		};
+
+		spi3: spi@2e4 {
+			compatible = "microchip,pic30-spi-audio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x2e4 0x1a>;
+			interrupts = <59 1>, <60 1>, <128 1>;
+			interrupt-names = "rx", "tx", "error";
+			status = "disabled";
+			label = "SPI3";
+		};
+
+		udid: udid@801200 {
+			compatible = "microchip,pic30-uid";
+			reg = <0x801200 0xf>;
+			status = "okay";
 		};
 
 		flash: flash-controller@8d0 {
 			compatible = "microchip,dspic33ep-flash-controller";
 			label = "FLASH_CTRL";
 			reg = <0x8d0 0x00C>;
+			interrupts = <14 1>, <13 1>;
+			interrupt-names = "nvm", "eccsbe";
 
 			#address-cells = <1>;
 			#size-cells = <1>;

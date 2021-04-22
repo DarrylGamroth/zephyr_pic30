@@ -26,21 +26,31 @@ extern "C" {
 static ALWAYS_INLINE unsigned int arch_irq_lock(void)
 {
 	unsigned int key;
+	const unsigned int ipl = 0x06;
 
-	// SET_AND_SAVE_CPU_IPL(key, 6);
-
-	key = DISICNT;
-	__builtin_disi(0x3fff);
-
+#ifdef CONFIG_CPU_DSPIC33C
+	__asm__ volatile("bfext #5,#3,SR,%0\n\t"
+			 "bfins #5,#3,%1,SR\n\t"
+			 : "=&r" (key)
+			 : "r" (ipl)
+			 : "memory");
+#else
+	SET_AND_SAVE_CPU_IPL(key, ipl);
+#endif
 	return key;
+
 }
 
 static ALWAYS_INLINE void arch_irq_unlock(unsigned int key)
 {
-	// RESTORE_CPU_IPL(key);
-	if (key == 0) {
-		__builtin_disi(0);
-	}
+#ifdef CONFIG_CPU_DSPIC33C
+	__asm__ volatile("bfins #5,#3,%0,SR"
+			 :
+			 : "r" (key)
+			 : "memory");
+#else
+	RESTORE_CPU_IPL(key);
+#endif
 }
 
 static ALWAYS_INLINE bool arch_irq_unlocked(unsigned int key)

@@ -62,8 +62,8 @@ struct log_backend {
 	bool autostart;
 };
 
-extern const struct log_backend __log_backends_start[];
-extern const struct log_backend __log_backends_end[];
+extern const struct log_backend __log_backends_list_start[];
+extern const struct log_backend __log_backends_list_end[];
 
 /**
  * @brief Macro for creating a logger backend instance.
@@ -216,7 +216,7 @@ static inline uint8_t log_backend_id_get(const struct log_backend *const backend
  */
 static inline const struct log_backend *log_backend_get(uint32_t idx)
 {
-	return &__log_backends_start[idx];
+	return &__log_backends_list_start[idx];
 }
 
 /**
@@ -226,7 +226,7 @@ static inline const struct log_backend *log_backend_get(uint32_t idx)
  */
 static inline int log_backend_count_get(void)
 {
-	return __log_backends_end - __log_backends_start;
+	return __log_backends_list_end - __log_backends_list_start;
 }
 
 /**

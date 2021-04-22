@@ -49,7 +49,8 @@ list(APPEND TOOLCHAIN_LD_FLAGS
 	-Wl,--no-isr
 	-Wl,--no-ivt
 	-Wl,--no-smart-io
-	-lm)
+	-lm
+  -lpic30)
 set(LIBC_LIBRARY_DIR "\"${TOOLCHAIN_HOME}\"/lib")
 
 # For CMake to be able to test if a compiler flag is supported by the

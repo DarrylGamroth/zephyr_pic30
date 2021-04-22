@@ -21,7 +21,7 @@ struct int_list_header {
  * header of the initList section, which is used by gen_isr_tables.py to create
  * the vector and sw isr tables,
  */
-Z_GENERIC_SECTION(.irq_info) struct int_list_header _iheader = {
+Z_GENERIC_SECTION(.irq_info) __attribute__((noload)) struct int_list_header _iheader = {
 	.table_size = IRQ_TABLE_SIZE,
 	.offset = CONFIG_GEN_IRQ_START_VECTOR,
 };
@@ -59,8 +59,9 @@ uintptr_t __irq_vector_table _irq_vector_table[IRQ_TABLE_SIZE] = {
  * type and bypass the _sw_isr_table, then do not generate one.
  */
 #ifdef CONFIG_GEN_SW_ISR_TABLE
-struct _isr_table_entry __sw_isr_table _sw_isr_table[IRQ_TABLE_SIZE] = {
-	[0 ...(IRQ_TABLE_SIZE - 1)] = {(const void *)0x42,
+COND_CODE_1(CONFIG_DYNAMIC_INTERRUPTS, (), (const)) \
+	struct _isr_table_entry __sw_isr_table _sw_isr_table[IRQ_TABLE_SIZE] = {
+		[0 ...(IRQ_TABLE_SIZE - 1)] = {(const void *)0x42,
 				       (void *)&z_irq_spurious},
 };
 #endif

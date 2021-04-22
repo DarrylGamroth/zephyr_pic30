@@ -8,12 +8,12 @@
 #include "shell_utils.h"
 #include "shell_wildcard.h"
 
-extern const struct shell_cmd_entry __shell_root_cmds_start[];
-extern const struct shell_cmd_entry __shell_root_cmds_end[];
+extern const struct shell_cmd_entry __shell_root_cmds_list_start[];
+extern const struct shell_cmd_entry __shell_root_cmds_list_end[];
 
 static inline const struct shell_cmd_entry *shell_root_cmd_get(uint32_t id)
 {
-	return &__shell_root_cmds_start[id];
+	return &__shell_root_cmds_list_start[id];
 }
 
 /* Calculates relative line number of given position in buffer */
@@ -222,8 +222,8 @@ void shell_pattern_remove(char *buff, uint16_t *buff_len, const char *pattern)
 
 static inline uint32_t shell_root_cmd_count(void)
 {
-	return ((uint8_t *)__shell_root_cmds_end -
-			(uint8_t *)__shell_root_cmds_start)/
+	return ((uint8_t *)__shell_root_cmds_list_end -
+			(uint8_t *)__shell_root_cmds_list_start)/
 				sizeof(struct shell_cmd_entry);
 }
 

@@ -43,16 +43,24 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 	pInitCtx->w5 = 0x5555u;
 	pInitCtx->w6 = 0x6666u;
 	pInitCtx->w7 = 0x7777u;
+
+#if defined(CONFIG_PIC30_DSP)
 	pInitCtx->accal = 0x000a;
 	pInitCtx->accah = 0x00aa;
 	pInitCtx->accau = 0x0aaa;
 	pInitCtx->accbl = 0x000b;
 	pInitCtx->accbh = 0x00bb;
 	pInitCtx->accbu = 0x0bbb;
+#endif /* CONFIG_PIC30_DSP */
 
 	pInitCtx->tblpag = TBLPAG;
+
+#if defined(CONFIG_PIC30_EDS)
 	pInitCtx->dsrpag = DSRPAG;
 	pInitCtx->dswpag = DSWPAG;
+#else
+	pInitCtx->psvpag = PSVPAG;
+#endif /* CONFIG_PIC30_EDS */
 
 	pInitCtx->splim = thread->stack_info.start + thread->stack_info.size;
 
@@ -74,7 +82,7 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 
 void *z_arch_get_next_switch_handle(struct k_thread **old_thread)
 {
-	*old_thread =  _current;
+	*old_thread = _current;
 
 	return z_get_next_switch_handle(*old_thread);
 }

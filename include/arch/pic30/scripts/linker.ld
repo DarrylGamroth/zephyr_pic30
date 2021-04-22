@@ -84,6 +84,8 @@ SECTIONS
         *(".libm.*")
 	*(.libdsp)
 	*(".libdsp.*")
+	*(.libpic30);
+	*(".libpic30.*");
 
     } GROUP_LINK_IN(ROMABLE_REGION)
 
@@ -133,6 +135,21 @@ SECTIONS
     #include <snippets-ram-sections.ld>
 
     SYMBOL(__kernel_ram_start) = .;
+
+    SECTION_DATA_PROLOGUE(nbss,(NOLOAD),)
+    {
+        . = ALIGN(2);
+	*(.nbss)
+	*(".nbss.*")
+	*(.bss._kernel)
+    } GROUP_LINK_IN(RAMABLE_REGION)
+
+    SECTION_DATA_PROLOGUE(ndata,,)
+    {
+        . = ALIGN(2);
+        *(.ndata)
+        *(".ndata.*")
+    } GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
 #if 0
     SECTION_DATA_PROLOGUE(_BSS_SECTION_NAME,(NOLOAD),)

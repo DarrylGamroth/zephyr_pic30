@@ -17,6 +17,7 @@
 #if !defined(_ASMLANGUAGE)
 #include <zephyr/types.h>
 #include <toolchain.h>
+#include <sys/util_macro.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +36,8 @@ struct _isr_table_entry {
 /* The software ISR table itself, an array of these structures indexed by the
  * irq line
  */
-extern struct _isr_table_entry _sw_isr_table[];
+extern COND_CODE_1(CONFIG_DYNAMIC_INTERRUPTS, (), (const)) \
+		struct _isr_table_entry _sw_isr_table[];
 
 /*
  * Data structure created in a special binary .intlist section for each
@@ -68,6 +70,7 @@ struct _isr_list {
 
 #define Z_ISR_DECLARE(irq, flags, func, param) \
 	static Z_DECL_ALIGN(struct _isr_list) Z_GENERIC_SECTION(.intList) \
+		__attribute__((noload)) \
 		 __used _MK_ISR_NAME(func, __COUNTER__) = \
 			{irq, flags, (void *)&func, (const void *)param}
 

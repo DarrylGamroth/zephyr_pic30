@@ -12,8 +12,8 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(cfb);
 
-extern const struct cfb_font __font_entry_start[];
-extern const struct cfb_font __font_entry_end[];
+extern const struct cfb_font __font_entry_list_start[];
+extern const struct cfb_font __font_entry_list_end[];
 
 static inline uint8_t byte_reverse(uint8_t b)
 {
@@ -262,11 +262,11 @@ int cfb_get_font_size(const struct device *dev, uint8_t idx, uint8_t *width,
 	}
 
 	if (width) {
-		*width = __font_entry_start[idx].width;
+		*width = __font_entry_list_start[idx].width;
 	}
 
 	if (height) {
-		*height = __font_entry_start[idx].height;
+		*height = __font_entry_list_start[idx].height;
 	}
 
 	return 0;
@@ -287,7 +287,7 @@ int cfb_framebuffer_init(const struct device *dev)
 
 	api->get_capabilities(dev, &cfg);
 
-	fb->numof_fonts = __font_entry_end - __font_entry_start;
+	fb->numof_fonts = __font_entry_list_end - __font_entry_list_start;
 	LOG_DBG("number of fonts %d", fb->numof_fonts);
 	if (!fb->numof_fonts) {
 		return -1;
@@ -303,7 +303,7 @@ int cfb_framebuffer_init(const struct device *dev)
 	fb->kerning = 0;
 	fb->inverted = false;
 
-	fb->fonts = __font_entry_start;
+	fb->fonts = __font_entry_list_start;
 	fb->font_idx = 0U;
 
 	fb->size = fb->x_res * fb->y_res / fb->ppt;

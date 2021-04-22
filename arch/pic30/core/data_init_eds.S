@@ -12,7 +12,7 @@
 #include <arch/cpu.h>
 
 /* exports */
-GTEXT(__data_init_extended)
+GTEXT(__data_init)
 
 ;;
 ;; Process data init template
@@ -40,10 +40,16 @@ GTEXT(__data_init_extended)
 ;; Calls:
 ;;  __memcpypd3crt
 ;;
-;; for PIC24F devices with extended data memory
 ;;
 
-SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
+#if !defined(CONFIG_PIC30_ENHANCED_CPU)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__long_indirect_call)
+        push     DSTOFFSET                       ; this device has no
+        push     LEN                             ; long call
+        return
+#endif
+
+SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init)
 
         ; for all format codes, hi-bit set means there is a DST page at
         ; data[0]
@@ -52,7 +58,6 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
         .equiv   FMT_COPY3,2    ;
 	.equiv   FMT_CALL, 3
         .equiv   FMT_DUO_COPY3,0x1F ;  copy len instructions to slave
-
 
 #define ZERO      w0
 #define TBLOFFSET w9
@@ -87,7 +92,11 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
         cp.b     FORMAT,#FMT_CALL
         bra nz,  2f
 
+#if defined(CONFIG_PIC30_ENHANCED_CPU)
         call.l   DSTOFFSET
+#else
+        rcall    __long_indirect_call
+#endif /* CONFIG_PIC30_ENHANCED_CPU */
         clr      ZERO                            ; calling a fn may clobber this
         bra      4f
 
@@ -111,7 +120,7 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
         setm     UPPERBYTE
 
         ;; special memcpyd3
-3:      rcall __memcpyd3extended
+3:      rcall    __memcpypd3crt
 
 4:      tblrdh.b [TBLOFFSET],PAGE               ; check for link
         tblrdl.w [TBLOFFSET],DSTOFFSET
@@ -144,7 +153,7 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__data_init_extended)
 ;; This function does not follow the standard C calling convesions
 ;;
 
-SECTION_SUBSEC_FUNC(reset,_reset_section,__memcpyd3extended)
+SECTION_SUBSEC_FUNC(reset,_reset_section,__memcpypd3crt)
 1:
         btst.c   UPPERBYTE, #13        ; set carry if UPPERBYTE is set
         addc     DSTOFFSET, #2, [w15]
@@ -204,5 +213,4 @@ SECTION_SUBSEC_FUNC(reset,_reset_section,__memcpyd3extended)
 
         tblrdh.b [TBLOFFSET],[DSTOFFSET++]
         bra     3b
-
 

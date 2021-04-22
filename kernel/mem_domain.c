@@ -118,9 +118,9 @@ void k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 	}
 #endif
 	if (num_parts != 0U) {
-		uint32_t i;
+		int i;
 
-		for (i = 0U; i < num_parts; i++) {
+		for (i = 0; i < num_parts; i++) {
 			__ASSERT(check_add_partition(domain, parts[i]),
 				 "invalid partition index %d (%p)",
 				 i, parts[i]);

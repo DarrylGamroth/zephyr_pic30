@@ -1,7 +1,7 @@
 # Copyright (c) 2020 Rubus Technologies Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-description: Microchip PIC30 Timer 1
+description: Microchip PIC30 Timer1
 
 compatible: "microchip,pic30-timer1"
 
@@ -16,3 +16,13 @@ properties:
 
     label:
       required: true
+
+    prescaler:
+      type: int
+      required: false
+      description: Timer prescaler
+      enum:
+        - 1
+        - 8
+        - 64
+        - 256

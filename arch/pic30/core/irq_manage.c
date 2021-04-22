@@ -35,26 +35,18 @@ int arch_irq_is_enabled(unsigned int irq)
 	return pic30_intc_irq_is_enabled(irq);
 }
 
-void z_pic30_enter_irq(void)
+void z_pic30_isr_demux(void)
 {
 	struct _isr_table_entry *ite;
 	unsigned int irq;
 
-	_current_cpu->nested++;
-
 	/* Get the actual interrupt source from the interrupt controller */
 	irq = pic30_intc_get_active();
 
-	/* Acnowledge the interrupt */
 	pic30_intc_irq_pending_clear(irq);
 
 	ite = &_sw_isr_table[irq];
 	ite->isr(ite->arg);
-
-	_current_cpu->nested--;
-#ifdef CONFIG_STACK_SENTINEL
-	z_check_stack_sentinel();
-#endif
 }
 
 void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio,

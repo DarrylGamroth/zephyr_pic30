@@ -100,4 +100,12 @@ config HWINFO_PSOC6
 	help
 	  Enable Cypress PSoC-6 hwinfo driver.
 
+config HWINFO_PIC30
+	bool "Microchip PIC30 device ID"
+	default y
+	depends on PIC30
+	select HWINFO_HAS_DRIVER
+	help
+	  Enable Microchip PIC30 hwinfo driver.
+
 endif

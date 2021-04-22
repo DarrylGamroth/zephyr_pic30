@@ -741,7 +741,7 @@ void z_thread_timeout(struct _timeout *timeout)
 }
 #endif
 
-int z_pend_curr_irqlock(uint32_t key, _wait_q_t *wait_q, k_timeout_t timeout)
+int z_pend_curr_irqlock(int key, _wait_q_t *wait_q, k_timeout_t timeout)
 {
 	pend(_current, wait_q, timeout);
 
@@ -829,7 +829,7 @@ void z_thread_priority_set(struct k_thread *thread, int prio)
 	}
 }
 
-static inline int resched(uint32_t key)
+static inline int resched(int key)
 {
 #ifdef CONFIG_SMP
 	_current_cpu->swap_ok = 0;
@@ -865,7 +865,7 @@ void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key)
 	}
 }
 
-void z_reschedule_irqlock(uint32_t key)
+void z_reschedule_irqlock(int key)
 {
 	if (resched(key)) {
 		z_swap_irqlock(key);
@@ -1510,12 +1510,12 @@ static int cpu_mask_mod(k_tid_t thread, uint32_t enable_mask, uint32_t disable_m
 
 int k_thread_cpu_mask_clear(k_tid_t thread)
 {
-	return cpu_mask_mod(thread, 0, 0xffffffff);
+	return cpu_mask_mod(thread, 0, 0xffffffffU);
 }
 
 int k_thread_cpu_mask_enable_all(k_tid_t thread)
 {
-	return cpu_mask_mod(thread, 0xffffffff, 0);
+	return cpu_mask_mod(thread, 0xffffffffU, 0);
 }
 
 int k_thread_cpu_mask_enable(k_tid_t thread, int cpu)

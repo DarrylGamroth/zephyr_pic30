@@ -136,7 +136,7 @@ void pic30_intc_irq_set_priority(unsigned int irq, unsigned int prio);
  */
 static inline unsigned int pic30_intc_get_active(void)
 {
-	return sys_read8(PIC30_INTTREG);
+	return sys_read8(PIC30_INTTREG) - 8u;
 }
 
 #endif /* !_ASMLANGUAGE */

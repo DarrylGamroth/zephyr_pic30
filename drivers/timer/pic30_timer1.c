@@ -14,26 +14,38 @@
 #include <spinlock.h>
 #include <soc.h>
 
-#define TIMER1_BASE		DT_INST_REG_ADDR(0)
-#define TIMER1_T1CON		((TIMER1_BASE) + 0x00)
-#define TIMER1_TMR1 		((TIMER1_BASE) + 0x20)
-#define TIMER1_PR1 		((TIMER1_BASE) + 0x40)
+#define PIC30_TIMER1_PRESCALER						\
+	COND_CODE_1(DT_INST_NODE_HAS_PROP(0, prescaler),		\
+		    (DT_INST_PROP(0, prescaler)), (1))
 
-#define TIMER1_T1CON_TON	(1U << 15)
-#define TIMER1_T1CON_SIDL	(1U << 13)
-#define TIMER1_T1CON_TWDIS	(1U << 12)
-#define TIMER1_T1CON_TWIP	(1U << 11)
-#define TIMER1_T1CON_PRWIP	(1U << 10)
-#define TIMER1_T1CON_TECS(x)	(((x)&(0x3U))<<8)
-#define TIMER1_T1CON_TGATE	(1U << 7)
-#define TIMER1_T1CON_TCKPS(x)	(((x)&(0x3U))<<4)
-#define TIMER1_T1CON_TSYNC	(1U << 2)
-#define TIMER1_T1CON_TCS	(1U << 1)
+#define PIC30_TIMER1_BASE		DT_INST_REG_ADDR(0)
+#if defined (CONFIG_CPU_DSPIC33C)
+#define PIC30_TIMER1_T1CON		((PIC30_TIMER1_BASE) + 0x00)
+#define PIC30_TIMER1_TMR1 		((PIC30_TIMER1_BASE) + 0x04)
+#define PIC30_TIMER1_PR1 		((PIC30_TIMER1_BASE) + 0x08)
+#define PIC30_TIMER1_T1CON_TON		(1U << 15)
+#define PIC30_TIMER1_T1CON_TECS(x)	(((x)&(0x3U))<<8)
+#define PIC30_TIMER1_T1CON_TGATE	(1U << 7)
+#define PIC30_TIMER1_T1CON_TCKPS(x)	(((x)&(0x3U))<<4)
+#define PIC30_TIMER1_T1CON_TSYNC	(1U << 2)
+#define PIC30_TIMER1_T1CON_TCS		(1U << 1)
+#else
+#define PIC30_TIMER1_T1CON		((PIC30_TIMER1_BASE) + 0x04)
+#define PIC30_TIMER1_TMR1 		((PIC30_TIMER1_BASE) + 0x00)
+#define PIC30_TIMER1_PR1 		((PIC30_TIMER1_BASE) + 0x02)
+#define PIC30_TIMER1_T1CON_TON		(1U << 15)
+#define PIC30_TIMER1_T1CON_TGATE	(1U << 6)
+#define PIC30_TIMER1_T1CON_TCKPS(x)	(((x)&(0x3U))<<4)
+#define PIC30_TIMER1_T1CON_TSYNC	(1U << 2)
+#define PIC30_TIMER1_T1CON_TCS		(1U << 1)
+#endif
+
 
 #define COUNTER_MAX		0xFFFFu
-#define TIMER1_STOPPED		0x0
+#define TIMER_STOPPED		0x0
 #define CYC_PER_TICK		(sys_clock_hw_cycles_per_sec()	\
-					/ CONFIG_SYS_CLOCK_TICKS_PER_SEC)
+					/ CONFIG_SYS_CLOCK_TICKS_PER_SEC \
+					/ PIC30_TIMER1_PRESCALER)
 
 #define MAX_TICKS		((COUNTER_MAX / CYC_PER_TICK) - 1)
 #define MAX_CYCLES		(MAX_TICKS * CYC_PER_TICK)
@@ -47,13 +59,13 @@
  * masked.  Choosing a fraction of a tick is probably a good enough
  * default, with an absolute minimum of 1k cyc.
  */
-#define MIN_DELAY MAX(1024, (CYC_PER_TICK/16))
+#define MIN_DELAY		MAX(1024, (CYC_PER_TICK/16))
 
 #define TICKLESS		(IS_ENABLED(CONFIG_TICKLESS_KERNEL))
 
 static struct k_spinlock lock;
 
-static uint32_t last_load;
+static uint16_t last_load;
 
 /*
  * This local variable holds the amount of timer cycles elapsed
@@ -81,7 +93,7 @@ static uint32_t announced_cycles;
  */
 static ALWAYS_INLINE uint16_t timer1_count_register_get(void)
 {
-	return sys_read16(TIMER1_TMR1);
+	return sys_read16(PIC30_TIMER1_TMR1);
 }
 
 /**
@@ -92,7 +104,7 @@ static ALWAYS_INLINE uint16_t timer1_count_register_get(void)
  */
 static ALWAYS_INLINE void timer1_count_register_set(uint16_t value)
 {
-	sys_write16(value, TIMER1_TMR1);
+	sys_write16(value, PIC30_TIMER1_TMR1);
 }
 
 /**
@@ -103,18 +115,18 @@ static ALWAYS_INLINE void timer1_count_register_set(uint16_t value)
  */
 static ALWAYS_INLINE uint16_t timer1_control_register_get(void)
 {
-	return sys_read16(TIMER1_T1CON);
+	return sys_read16(PIC30_TIMER1_T1CON);
 }
 
 /**
  *
- * @brief Set Timer0 control register to the specified value
+ * @brief Set Timer1 control register to the specified value
  *
  * @return N/A
  */
 static ALWAYS_INLINE void timer1_control_register_set(uint16_t value)
 {
-	sys_write16(value, TIMER1_T1CON);
+	sys_write16(value, PIC30_TIMER1_T1CON);
 }
 
 /**
@@ -125,7 +137,7 @@ static ALWAYS_INLINE void timer1_control_register_set(uint16_t value)
  */
 static ALWAYS_INLINE uint16_t timer1_period_register_get(void)
 {
-	return sys_read16(TIMER1_PR1);
+	return sys_read16(PIC30_TIMER1_PR1);
 }
 
 /**
@@ -136,7 +148,7 @@ static ALWAYS_INLINE uint16_t timer1_period_register_get(void)
  */
 static ALWAYS_INLINE void timer1_period_register_set(uint16_t count)
 {
-	sys_write16(count, TIMER1_PR1);
+	sys_write16(count, PIC30_TIMER1_PR1);
 }
 
 /**
@@ -147,8 +159,8 @@ static ALWAYS_INLINE void timer1_period_register_set(uint16_t count)
  */
 static ALWAYS_INLINE void timer1_enable(void)
 {
-	uint16_t reg = sys_read16(TIMER1_T1CON);
-	sys_write16(reg | TIMER1_T1CON_TON, TIMER1_T1CON);
+	uint16_t reg = sys_read16(PIC30_TIMER1_T1CON);
+	sys_write16(reg | PIC30_TIMER1_T1CON_TON, PIC30_TIMER1_T1CON);
 }
 
 /**
@@ -159,8 +171,8 @@ static ALWAYS_INLINE void timer1_enable(void)
  */
 static ALWAYS_INLINE void timer1_disable(void)
 {
-	uint16_t reg = sys_read16(TIMER1_T1CON);
-	sys_write16(reg & ~TIMER1_T1CON_TON, TIMER1_T1CON);
+	uint16_t reg = sys_read16(PIC30_TIMER1_T1CON);
+	sys_write16(reg & ~PIC30_TIMER1_T1CON_TON, PIC30_TIMER1_T1CON);
 }
 
 static void pic30_timer_irq_handler(const void *device)
@@ -185,8 +197,12 @@ static void pic30_timer_irq_handler(const void *device)
 		 *
 		 * We can assess if this is the case by inspecting COUNTFLAG.
 		 */
-
-		dticks = (cycle_count - announced_cycles) / CYC_PER_TICK;
+		/*
+		 * Use builtin function instead of generic C version:
+		 * dticks = (cycle_count - announced_cycles) / CYC_PER_TICK;
+		 */
+		dticks = __builtin_divud((cycle_count - announced_cycles),
+				CYC_PER_TICK);
 		announced_cycles += dticks * CYC_PER_TICK;
 		z_clock_announce(dticks);
 	} else {
@@ -205,7 +221,7 @@ void z_clock_set_timeout(int32_t ticks, bool idle)
 	if (IS_ENABLED(CONFIG_TICKLESS_IDLE) && idle
 		&& ticks == K_TICKS_FOREVER) {
 		timer1_disable();
-		last_load = TIMER1_STOPPED;
+		last_load = TIMER_STOPPED;
 		return;
 	}
 
@@ -266,13 +282,17 @@ uint32_t z_clock_elapsed(void)
 	}
 
 	uint32_t cyc;
+
 	k_spinlock_key_t key = k_spin_lock(&lock);
 
-	cyc =  timer1_count_register_get() + cycle_count - announced_cycles;
+	cyc = timer1_count_register_get() + cycle_count - announced_cycles;
 
 	k_spin_unlock(&lock, key);
 
-	return cyc / CYC_PER_TICK;
+	/*
+	 * cyc / CYC_PER_TICK
+	 */
+	return __builtin_divud(cyc, CYC_PER_TICK);
 }
 
 uint32_t z_timer_cycle_get_32(void)
@@ -300,8 +320,8 @@ int z_clock_driver_init(const struct device *device)
 	timer1_period_register_set(last_load - 1);
 	timer1_count_register_set(0);
 
-	ctrl = TIMER1_T1CON_SIDL | TIMER1_T1CON_TECS(1) |
-		TIMER1_T1CON_TCKPS(0);
+	ctrl = PIC30_TIMER1_T1CON_TECS(1) |
+		PIC30_TIMER1_T1CON_TCKPS(PIC30_TIMER1_PRESCALER / 8);
 	timer1_control_register_set(ctrl);
 
 	irq_enable(DT_INST_IRQN(0));

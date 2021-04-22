@@ -85,6 +85,7 @@ void z_sys_init_run_level(int32_t _level);
 #define Z_INIT_ENTRY_DEFINE(_entry_name, _init_fn, _device, _level, _prio)	\
 	static const Z_DECL_ALIGN(struct init_entry)			\
 		_CONCAT(__init_, _entry_name) __used			\
+	IF_ENABLED(CONFIG_PIC30, (__psv))				\
 	__attribute__((__section__(".init_" #_level STRINGIFY(_prio)))) = { \
 		.init = (_init_fn),					\
 		.dev = (_device),					\

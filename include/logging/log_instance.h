@@ -48,12 +48,21 @@ struct log_source_dynamic_data {
 #define LOG_ITEM_CONST_DATA(_name) UTIL_CAT(log_const_, _name)
 
 #define Z_LOG_CONST_ITEM_REGISTER(_name, _str_name, _level)		     \
-	const struct log_source_const_data LOG_ITEM_CONST_DATA(_name)	     \
-	__attribute__ ((section("." STRINGIFY(LOG_ITEM_CONST_DATA(_name))))) \
-	__attribute__((used)) = {					     \
+	const Z_STRUCT_SECTION_ITERABLE(log_source_const_data,		     \
+			LOG_ITEM_CONST_DATA(_name)) = {			     \
 		.name = _str_name,					     \
 		.level  = (_level),					     \
 	}
+
+/** @brief Creates name of variable and section for runtime log data.
+ *
+ *  @param _name Name.
+ */
+#define LOG_ITEM_DYNAMIC_DATA(_name) UTIL_CAT(log_dynamic_, _name)
+
+#define Z_LOG_DYNAMIC_ITEM_REGISTER(_name)				     \
+	Z_STRUCT_SECTION_ITERABLE(log_source_dynamic_data,		     \
+			LOG_ITEM_DYNAMIC_DATA(_name))
 
 /** @def LOG_INSTANCE_PTR_DECLARE
  * @brief Macro for declaring a logger instance pointer in the module structure.
@@ -84,13 +93,8 @@ struct log_source_dynamic_data {
 		LOG_INSTANCE_FULL_NAME(_module_name, _inst_name),	   \
 		STRINGIFY(_module_name._inst_name),			   \
 		_level);						   \
-	struct log_source_dynamic_data LOG_INSTANCE_DYNAMIC_DATA(	   \
-						_module_name, _inst_name)  \
-		__attribute__ ((section("." STRINGIFY(			   \
-				LOG_INSTANCE_DYNAMIC_DATA(_module_name,	   \
-						       _inst_name)	   \
-				)					   \
-		))) __attribute__((used))
+	Z_LOG_DYNAMIC_ITEM_REGISTER(					   \
+		LOG_INSTANCE_FULL_NAME(_module_name, _inst_name)
 
 #define LOG_INSTANCE_PTR_INIT(_name, _module_name, _inst_name)	   \
 	._name = &LOG_ITEM_DYNAMIC_DATA(			   \

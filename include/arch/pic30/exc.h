@@ -39,15 +39,21 @@ struct __esf {
 	uint16_t w5;
 	uint16_t w6;
 	uint16_t w7;
+#if defined(CONFIG_PIC30_DSP)
 	uint16_t accal;
 	uint16_t accah;
 	uint16_t accau;
 	uint16_t accbl;
 	uint16_t accbh;
 	uint16_t accbu;
+#endif /* CONFIG_PIC30_DSP */
 	uint16_t tblpag;
+#if defined(CONFIG_PIC30_EDS)
 	uint16_t dsrpag;
 	uint16_t dswpag;
+#else
+	uint16_t psvpag;
+#endif /* CONFIG_PIC30_EDS */
 	uint16_t rcount;
 	uint16_t splim;
 	uint16_t sr;

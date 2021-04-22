@@ -12,7 +12,10 @@
 
 #include <toolchain/gcc.h>
 
+#ifdef popcount
 #undef popcount
+#define popcount(x) __builtin_popcountl(x)
+#endif
 
 #if __GNUC__ >= 5
 #undef HAS_BUILTIN___builtin_add_overflow
@@ -73,5 +76,7 @@
 #undef __in_section_unique
 #define __in_section_unique(seg) ___in_section(seg, __LINE__, __COUNTER__)
 #endif
+
+#define __psv	__attribute__((__space__(psv)))
 
 #endif

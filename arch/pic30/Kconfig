@@ -15,6 +15,7 @@ config ARCH
 
 config CPU_PIC24E
 	bool
+	select PIC30_ENHANCED_CPU
 	help
 	  This option signifies the use of a CPU from the PIC24E family.
 
@@ -30,18 +31,42 @@ config CPU_PIC24H
 
 config CPU_DSPIC33C
 	bool
+	select PIC30_ENHANCED_CPU
+	select PIC30_DSP
 	help
 	  This option signifies the use of a CPU from the dsPIC33C family.
 
 config CPU_DSPIC33E
 	bool
+	select PIC30_ENHANCED_CPU
+	select PIC30_DSP
 	help
 	  This option signifies the use of a CPU from the dsPIC33E family.
 
 config CPU_DSPIC33F
 	bool
+	select PIC30_DSP
 	help
 	  This option signifies the use of a CPU from the dsPIC33F family.
+
+config PIC30_ENHANCED_CPU
+	bool
+	select PIC30_EDS
+	help
+	  This option signifies the use of an PIC30 processor
+	  implementataion with the enhanced instruction set.
+
+config PIC30_DSP
+	bool
+	help
+	  This option signifies the use of an PIC30 processor
+	  implementation supporting the DSP instructions.
+
+config PIC30_EDS
+	bool
+	help
+	  This option signifies the use of an PIC30 processor
+	  implementation supporting Extended Data Space.
 
 config DYNAMIC_DIRECT_INTERRUPTS
 	bool "Enable support for dynamic direct interrupts"

@@ -5,6 +5,7 @@
  */
 
 #include <device.h>
+#include <arch/cpu.h>
 #include <drivers/interrupt_controller/pic30-intc.h>
 
 void pic30_intc_irq_enable(unsigned int irq)
@@ -85,6 +86,12 @@ void pic30_intc_irq_set_priority(unsigned int irq, unsigned int prio)
 int pic30_intc_init(const struct device *unused)
 {
 	ARG_UNUSED(unused);
+
+	int irq = 0;
+
+	for (; irq < CONFIG_NUM_IRQS; irq++) {
+		pic30_intc_irq_set_priority(irq, _EXC_IRQ_DEFAULT_PRIO);
+	}
 
 	return 0;
 }

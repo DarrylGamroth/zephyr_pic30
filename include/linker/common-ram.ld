@@ -71,12 +71,7 @@
 		SYMBOL(__shell_cmd_end) = .;
 	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
 
-	SECTION_DATA_PROLOGUE(log_dynamic_sections,,)
-	{
-		SYMBOL(__log_dynamic_start) = .;
-		KEEP(*(SORT(.log_dynamic_*)));
-		SYMBOL(__log_dynamic_end) = .;
-	} GROUP_DATA_LINK_IN(RAMABLE_REGION, ROMABLE_REGION)
+	Z_ITERABLE_SECTION_RAM(log_dynamic, 4)
 
 	Z_ITERABLE_SECTION_RAM(_static_thread_data, 4)
 

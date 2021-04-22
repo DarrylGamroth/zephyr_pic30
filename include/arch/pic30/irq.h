@@ -38,8 +38,6 @@ extern void z_pic30_enter_irq(void);
 extern void z_pic30_irq_priority_set(unsigned int irq, unsigned int prio,
 				     uint32_t flags);
 
-extern void z_pic30_interrupt_init(void);
-
 /* macros convert value of it's argument to a string */
 #define DO_TOSTR(s) #s
 #define TOSTR(s) DO_TOSTR(s)

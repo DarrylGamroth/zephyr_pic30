@@ -23,8 +23,9 @@
 
 		timer1: timer@100 {
 			compatible = "microchip,pic30-timer1";
-			reg = <0x000100 0x008>;
-			status = "disabled";
+			reg = <0x100 0x06>;
+			interrupts = <1 1>;
+			label = "TIMER1";
 		};
 	};
 };
